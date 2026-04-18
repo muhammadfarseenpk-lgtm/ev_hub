@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block page_title %}Booking Requests{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="p-6 border-b border-gray-200">
+        <h3 class="font-bold text-lg">Manage Charging Slots</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left whitespace-nowrap">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="p-4 font-semibold text-gray-600">Customer</th>
+                    <th class="p-4 font-semibold text-gray-600">Charger</th>
+                    <th class="p-4 font-semibold text-gray-600">Time Slot</th>
+                    <th class="p-4 font-semibold text-gray-600">Est. Revenue</th>
+                    <th class="p-4 font-semibold text-gray-600">Status</th>
+                    <th class="p-4 font-semibold text-gray-600 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for booking in bookings %}
+                <tr class="hover:bg-gray-50">
+                    <td class="p-4 font-medium text-gray-900">{{ booking.user.get_full_name|default:booking.user.username }}</td>
+                    <td class="p-4 text-gray-700">{{ booking.charger.charger_id_string }}</td>
+                    <td class="p-4 text-gray-700">{{ booking.start_time|date:"M d, H:i" }}</td>
+                    <td class="p-4 text-gray-700 font-medium text-green-600">₹{{ booking.total_cost }}</td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 text-[10px] rounded-full font-bold uppercase
+                            {% if booking.status == 'PENDING' %}bg-yellow-100 text-yellow-800
+                            {% elif booking.status == 'APPROVED' %}bg-blue-100 text-blue-800
+                            {% elif booking.status == 'COMPLETED' %}bg-green-100 text-green-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ booking.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="p-4 text-right space-x-2">
+                        {% if booking.status == 'PENDING' %}
+                            <a href="{% url 'update_booking_status' booking.id 'APPROVED' %}" class="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 font-bold">Accept</a>
+                            <a href="{% url 'update_booking_status' booking.id 'REJECTED' %}" class="text-xs border border-red-200 text-red-600 px-3 py-1.5 rounded hover:bg-red-50 font-bold">Reject</a>
+                        {% elif booking.status == 'APPROVED' %}
+                            <a href="{% url 'update_booking_status' booking.id 'COMPLETED' %}" class="text-xs bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 font-bold">Mark Completed</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="p-10 text-center text-gray-500">No booking requests found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -19,5 +19,22 @@ urlpatterns = [
     path('warranty/', views.warranty_list, name='warranty_list'),
     path('warranty/<int:pk>/status/<str:new_status>/', views.update_warranty_status, name='update_warranty_status'),
     path('reports/', views.service_reports, name='service_reports'),
+    path('appointments/', views.manage_appointments, name='manage_appointments'),
+    # Appointment Status Update
+    path('appointments/<int:pk>/status/<str:new_status>/', views.update_appointment_status, name='update_appointment_status'),
+    
+    # Part Orders
+    path('orders/', views.manage_orders, name='manage_orders'),
+    
+    # Warranty
+    path('warranty/', views.warranty_list, name='warranty_list'),
+    path('warranty/<int:pk>/status/<str:new_status>/', views.update_warranty_status, name='update_warranty_status'),
+    
+    # Reports
+    path('reports/', views.service_reports, name='service_reports'),
+    
+    # Delivery Partner Management
+    path('delivery-partners/', views.manage_delivery_partners, name='manage_delivery_partners'),
+    path('delivery-partners/add/', views.add_delivery_partner, name='add_delivery_partner'),
     
 ]

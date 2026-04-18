@@ -4,27 +4,27 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from accounts.decorators import role_required  # Using your original accounts decorator
-from .models import DeliveryPartnerProfile, DeliveryOrder
+from .models import DeliveryPartnerProfile, DeliveryTask
 from .forms import DeliveryProfileForm, UserProfileForm
 
 @login_required
 @role_required('DELIVERY_PARTNER')
 def delivery_dashboard(request):
     # Gracefully get or create profile so it doesn't crash on first login
-    partner, created = DeliveryPartnerProfile.objects.get_or_create(user=request.user)
+    profile, created = DeliveryPartnerProfile.objects.get_or_create(user=request.user)
     
-    # Only show active orders on the main dashboard
-    active_orders = DeliveryOrder.objects.filter(
-        partner=partner, 
-        status__in=['ASSIGNED', 'IN_TRANSIT']
+    # Only show active orders on the main dashboard (matches DeliveryTask StatusChoices)
+    active_tasks = DeliveryTask.objects.filter(
+        partner=profile, 
+        status__in=['ASSIGNED', 'PICKED_UP']
     ).order_by('-assigned_at')
     
-    completed_count = DeliveryOrder.objects.filter(partner=partner, status='DELIVERED').count()
+    completed_count = DeliveryTask.objects.filter(partner=profile, status='DELIVERED').count()
     
     return render(request, 'delivery/dashboard.html', {
-        'active_orders': active_orders,
+        'tasks': active_tasks, # Template expects 'tasks'
         'completed_count': completed_count,
-        'partner': partner
+        'partner': profile
     })
 
 @login_required
@@ -44,33 +44,46 @@ def partner_profile_view(request):
         u_form = UserProfileForm(instance=request.user)
         p_form = DeliveryProfileForm(instance=profile)
         
-    return render(request, 'delivery/profile.html', {'u_form': u_form, 'p_form': p_form})
+    # Passing 'form' as well so {{ form.as_p }} in your template doesn't crash
+    return render(request, 'delivery/profile.html', {
+        'u_form': u_form, 
+        'p_form': p_form, 
+        'form': p_form 
+    })
 
 @login_required
 @role_required('DELIVERY_PARTNER')
-def update_delivery_status(request, order_id, new_status):
-    order = get_object_or_404(DeliveryOrder, id=order_id, partner__user=request.user)
+def update_task_status(request, task_id, new_status):
+    profile = get_object_or_404(DeliveryPartnerProfile, user=request.user)
+    task = get_object_or_404(DeliveryTask, id=task_id, partner=profile)
     
     # Security: Ensure they can only update to valid states
-    valid_statuses = ['IN_TRANSIT', 'DELIVERED', 'FAILED']
+    valid_statuses = ['PICKED_UP', 'DELIVERED', 'FAILED']
     if new_status in valid_statuses:
-        order.status = new_status
+        task.status = new_status
         if new_status == 'DELIVERED':
-            order.delivered_at = timezone.now()
-        order.save()
-        messages.success(request, f"Order #{order.id} marked as {order.get_status_display()}.")
+            task.completed_at = timezone.now()
+        task.save()
+        messages.success(request, f"Task #{task.id} marked as {task.get_status_display()}.")
     
     return redirect('delivery_dashboard')
 
 @login_required
 @role_required('DELIVERY_PARTNER')
+def route_guidance(request, task_id):
+    profile = getattr(request.user, 'delivery_profile', None)
+    task = get_object_or_404(DeliveryTask, id=task_id, partner=profile)
+    return render(request, 'delivery/route_guidance.html', {'task': task})
+
+@login_required
+@role_required('DELIVERY_PARTNER')
 def delivery_history(request):
-    partner, created = DeliveryPartnerProfile.objects.get_or_create(user=request.user)
+    profile, created = DeliveryPartnerProfile.objects.get_or_create(user=request.user)
     
     # Show only past orders (Completed or Failed)
-    history = DeliveryOrder.objects.filter(
-        partner=partner, 
+    history = DeliveryTask.objects.filter(
+        partner=profile, 
         status__in=['DELIVERED', 'FAILED']
-    ).order_by('-assigned_at')
+    ).order_by('-completed_at') # Order by completion date instead of assigned
     
-    return render(request, 'delivery/history.html', {'history': history})
+    return render(request, 'delivery/history.html', {'tasks': history}) # Template expects 'tasks'

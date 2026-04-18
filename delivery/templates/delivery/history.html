@@ -1,39 +1,34 @@
 {% extends 'base.html' %}
 {% block page_title %}Delivery History{% endblock %}
-
 {% block content %}
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
     <div class="p-6 border-b border-gray-200">
-        <h3 class="font-bold text-lg">Past Deliveries</h3>
+        <h3 class="font-bold text-lg">Completed Deliveries</h3>
     </div>
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-gray-50 border-b border-gray-200 text-sm text-gray-500">
-                    <th class="p-4 font-medium">Order ID</th>
-                    <th class="p-4 font-medium">Destination</th>
-                    <th class="p-4 font-medium">Date</th>
-                    <th class="p-4 font-medium text-right">Outcome</th>
+        <table class="w-full text-left whitespace-nowrap">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="p-4 font-semibold text-gray-600">Package</th>
+                    <th class="p-4 font-semibold text-gray-600">Dropoff Location</th>
+                    <th class="p-4 font-semibold text-gray-600">Delivered On</th>
+                    <th class="p-4 font-semibold text-gray-600">Status</th>
                 </tr>
             </thead>
-            <tbody>
-                {% for order in history %}
-                <tr class="border-b border-gray-100 hover:bg-gray-50">
-                    <td class="p-4 font-medium text-gray-900">#{{ order.id }}</td>
-                    <td class="p-4 text-sm text-gray-600 truncate max-w-xs">{{ order.destination_address }}</td>
-                    <td class="p-4 text-sm text-gray-500">{{ order.assigned_at|date:"M d, Y" }}</td>
-                    <td class="p-4 text-right">
-                        <span class="px-2 py-1 text-xs rounded font-semibold
-                            {% if order.status == 'DELIVERED' %}bg-green-100 text-green-800
-                            {% else %}bg-red-100 text-red-800{% endif %}">
-                            {{ order.get_status_display }}
+            <tbody class="divide-y divide-gray-100">
+                {% for task in tasks %}
+                <tr class="hover:bg-gray-50">
+                    <td class="p-4 font-bold text-gray-900">{{ task.package_details }}</td>
+                    <td class="p-4 text-gray-700">{{ task.dropoff_address }}</td>
+                    <td class="p-4 text-gray-500">{{ task.completed_at|date:"M d, Y - H:i" }}</td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 text-xs rounded-full font-bold uppercase bg-green-100 text-green-800">
+                            {{ task.get_status_display }}
                         </span>
                     </td>
                 </tr>
                 {% empty %}
-                <tr>
-                    <td colspan="4" class="p-8 text-center text-gray-500">No delivery history found.</td>
-                </tr>
+                <tr><td colspan="4" class="p-8 text-center text-gray-500">No completed deliveries yet.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

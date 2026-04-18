@@ -25,3 +25,8 @@ def custom_500(request):
 
 def custom_403(request, exception):
     return render(request, 'errors/403.html', status=403)
+
+from django.shortcuts import render
+
+def landing_page(request):
+    return render(request, 'landing.html')

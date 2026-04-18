@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block page_title %}Manage Chargers{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="mb-6 flex justify-between items-center">
+        <h2 class="text-2xl font-bold text-gray-800">Your Chargers</h2>
+        <a href="{% url 'charger_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm">
+            + Add New Charger
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left whitespace-nowrap">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="p-4 font-semibold text-gray-600">Charger ID</th>
+                        <th class="p-4 font-semibold text-gray-600">Power (kW)</th>
+                        <th class="p-4 font-semibold text-gray-600">Connector</th>
+                        <th class="p-4 font-semibold text-gray-600">Price/kWh</th>
+                        <th class="p-4 font-semibold text-gray-600">Status</th>
+                        <th class="p-4 font-semibold text-gray-600 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for charger in chargers %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="p-4 font-bold text-gray-900">{{ charger.charger_id_string }}</td>
+                        <td class="p-4 text-gray-700">{{ charger.power_kw }} kW</td>
+                        <td class="p-4 text-gray-700">{{ charger.connector_type }}</td>
+                        <td class="p-4 text-gray-700">₹{{ charger.dynamic_price_per_kwh }}</td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 text-[10px] rounded-full font-bold uppercase tracking-wider
+                                {% if charger.status == 'AVAILABLE' %}bg-green-100 text-green-800
+                                {% elif charger.status == 'IN_USE' %}bg-blue-100 text-blue-800
+                                {% elif charger.status == 'FAULTED' %}bg-red-100 text-red-800
+                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                {{ charger.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="p-4 text-right">
+                            <a href="{% url 'charger_update' charger.id %}" class="text-blue-600 hover:text-blue-800 font-medium text-sm px-3 py-1 bg-blue-50 rounded hover:bg-blue-100 transition">Edit</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="p-10 text-center text-gray-500">
+                            <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            <p class="text-lg font-medium text-gray-900">No chargers added yet.</p>
+                            <p class="text-sm">Click the button above to add your first charger to this station.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

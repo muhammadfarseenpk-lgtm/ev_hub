@@ -26,16 +26,14 @@ class Inventory(models.Model):
     part_name = models.CharField(max_length=200)
     stock_quantity = models.PositiveIntegerField()
     reorder_threshold = models.PositiveIntegerField()
-    
-    # Add this to the bottom of service/models.py
+
 class WarrantyClaim(models.Model):
     class StatusChoices(models.TextChoices):
         PENDING = 'PENDING', 'Pending Validation'
         APPROVED = 'APPROVED', 'Approved'
         REJECTED = 'REJECTED', 'Rejected'
 
-    # Assuming you have imported Vehicle from owner app
-    vehicle = models.ForeignKey('owner.Vehicle', on_delete=models.CASCADE, related_name='warranty_claims')
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='warranty_claims')
     service_center = models.ForeignKey(ServiceCenter, on_delete=models.CASCADE)
     part_name = models.CharField(max_length=100)
     issue_description = models.TextField()
@@ -44,3 +42,15 @@ class WarrantyClaim(models.Model):
 
     def __str__(self):
         return f"Warranty: {self.part_name} - {self.vehicle.registration_number}"
+
+class PartOrder(models.Model):
+    class StatusChoices(models.TextChoices):
+        PENDING = 'PENDING', 'Pending Approval'
+        SHIPPED = 'SHIPPED', 'In Transit'
+        DELIVERED = 'DELIVERED', 'Delivered'
+
+    service_center = models.ForeignKey(ServiceCenter, on_delete=models.CASCADE)
+    part_name = models.CharField(max_length=200)
+    quantity = models.PositiveIntegerField()
+    status = models.CharField(max_length=20, choices=StatusChoices.choices, default=StatusChoices.PENDING)
+    ordered_at = models.DateTimeField(auto_now_add=True)

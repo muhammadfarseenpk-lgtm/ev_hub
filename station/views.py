@@ -36,23 +36,22 @@ def operator_dashboard(request):
         
     return render(request, 'station/dashboard.html', context)
 
+# station/views.py
 @login_required
 @role_required('STATION_OPERATOR')
 def station_profile(request):
-    # This handles both setup and edit
+    # This creates a profile if it doesn't exist, or loads it if it does
     station, created = ChargingStation.objects.get_or_create(operator=request.user)
     
     if request.method == 'POST':
-        form = ChargingStationProfileForm(request.POST, instance=station)
+        form = StationProfileForm(request.POST, instance=station)
         if form.is_valid():
             form.save()
-            messages.success(request, "Station profile updated successfully!")
+            messages.success(request, 'Station profile updated!')
             return redirect('operator_dashboard')
     else:
-        form = ChargingStationProfileForm(instance=station)
-        
+        form = StationProfileForm(instance=station)
     return render(request, 'station/station_profile.html', {'form': form, 'station': station})
-
 @login_required
 @role_required('STATION_OPERATOR')
 def charger_list(request):
@@ -134,3 +133,57 @@ def browse_stations(request):
         'search_query': search_query,
         'min_power': min_power,
     })
+    
+    # Add this import at the top if it's missing
+from django.db.models import Count
+
+# --- BOOKING MANAGEMENT ---
+@login_required
+@role_required('STATION_OPERATOR')
+def operator_booking_list(request):
+    station = getattr(request.user, 'station_profile', None)
+    if not station:
+        messages.warning(request, "Please set up your station first.")
+        return redirect('station_profile')
+    
+    # Fetch all bookings for chargers belonging to this station
+    bookings = Booking.objects.filter(charger__station=station).order_by('-start_time')
+    return render(request, 'station/operator_bookings.html', {'bookings': bookings})
+
+@login_required
+@role_required('STATION_OPERATOR')
+def update_booking_status(request, booking_id, new_status):
+    station = getattr(request.user, 'station_profile', None)
+    booking = get_object_or_404(Booking, id=booking_id, charger__station=station)
+    
+    valid_statuses = ['APPROVED', 'REJECTED', 'COMPLETED']
+    if new_status in valid_statuses:
+        booking.status = new_status
+        booking.save()
+        messages.success(request, f"Booking from {booking.user.username} marked as {booking.get_status_display()}.")
+        
+    return redirect('operator_booking_list')
+
+# --- REPORTS & ANALYTICS ---
+@login_required
+@role_required('STATION_OPERATOR')
+def operator_reports(request):
+    station = getattr(request.user, 'station_profile', None)
+    if not station:
+        return redirect('station_profile')
+        
+    # Aggregate Revenue
+    completed_bookings = Booking.objects.filter(charger__station=station, status='COMPLETED')
+    total_revenue = sum(b.total_cost for b in completed_bookings if b.total_cost)
+    
+    # Usage Analytics (Which chargers are used most)
+    charger_analytics = Charger.objects.filter(station=station).annotate(
+        usage_count=Count('bookings') # Assuming related_name for booking on charger is 'booking' or default 'booking_set'
+    ).order_by('-usage_count')
+    
+    context = {
+        'total_revenue': total_revenue,
+        'completed_count': completed_bookings.count(),
+        'charger_analytics': charger_analytics,
+    }
+    return render(request, 'station/operator_reports.html', context)

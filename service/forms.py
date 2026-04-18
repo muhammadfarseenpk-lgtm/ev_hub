@@ -39,3 +39,21 @@ class AppointmentBookingForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Limit the vehicle dropdown to ONLY the cars owned by this user
         self.fields['vehicle'].queryset = user.vehicles.all()
+        
+        # service/forms.py
+from django import forms
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+class DeliveryPartnerCreationForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'w-full p-2 border rounded'}))
+    
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email']
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'})

@@ -2,6 +2,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from accounts.decorators import role_required
 from .models import ServiceCenter, Appointment, Inventory
 from .forms import ServiceCenterProfileForm, InventoryForm
@@ -54,15 +55,14 @@ def appointment_list(request):
 @role_required('SERVICE_CENTER')
 def update_appointment_status(request, pk, new_status):
     center = getattr(request.user, 'service_center_profile', None)
-    appointment = get_object_or_404(Appointment, pk=pk, service_center=center)
+    appointment = get_object_or_404(Appointment, pk=pk, service_center=center) # Changed here
     
-    valid_statuses = dict(Appointment.StatusChoices.choices).keys()
+    valid_statuses = ['IN_PROGRESS', 'COMPLETED', 'CANCELLED']
     if new_status in valid_statuses:
         appointment.status = new_status
         appointment.save()
-        messages.success(request, f'Repair status updated to {appointment.get_status_display()}.')
-    
-    return redirect('appointment_list')
+        messages.success(request, f"Appointment status updated to {appointment.get_status_display()}.")
+    return redirect('manage_appointments')
 
 @login_required
 @role_required('SERVICE_CENTER')
@@ -160,7 +160,7 @@ def trigger_sos(request):
 
 # Add these imports at the top of service/views.py if missing
 from django.db.models import Count
-from delivery.models import DeliveryOrder, DeliveryPartnerProfile
+from delivery.models import DeliveryTask, DeliveryPartnerProfile
 from .models import WarrantyClaim
 
 # --- ORDERS MANAGEMENT ---
@@ -176,7 +176,7 @@ def manage_orders(request):
         
         if partner_id and destination:
             partner = get_object_or_404(DeliveryPartnerProfile, id=partner_id)
-            DeliveryOrder.objects.create(
+            DeliveryTask.objects.create(
                 partner=partner,
                 destination_address=destination,
                 status='ASSIGNED'
@@ -184,7 +184,7 @@ def manage_orders(request):
             messages.success(request, f"Part order dispatched to {partner.user.username}.")
             return redirect('manage_orders')
 
-    orders = DeliveryOrder.objects.all().order_by('-assigned_at')[:50] # Show recent platform orders
+    orders = DeliveryTask.objects.all().order_by('-assigned_at')[:50] # Show recent platform orders
     partners = DeliveryPartnerProfile.objects.filter(is_available=True)
     
     return render(request, 'service/orders.html', {'orders': orders, 'partners': partners})
@@ -231,3 +231,110 @@ def service_reports(request):
         'issue_analytics': issue_analytics,
     }
     return render(request, 'service/reports.html', context)
+
+@login_required
+@role_required('SERVICE_CENTER')
+def manage_appointments(request):
+    # Get the service center profile for the logged-in user
+    center = getattr(request.user, 'service_center_profile', None)
+    
+    if not center:
+        messages.warning(request, "Please complete your Service Center setup first.")
+        return redirect('service_dashboard') # Assuming you have a dashboard view
+        
+    # Fetch all appointments for this center
+    appointments = Appointment.objects.filter(service_center=center).order_by('scheduled_time')
+    
+    return render(request, 'service/appointments.html', {'appointments': appointments})
+
+from django.db.models import Sum, Count
+from .models import PartOrder, WarrantyClaim, Appointment # Ensure imports match your file
+
+@login_required
+@role_required('SERVICE_CENTER')
+def update_appointment_status(request, pk, new_status):
+    center = getattr(request.user, 'service_center_profile', None)
+    appointment = get_object_or_404(Appointment, pk=pk, service_center=center)
+    
+    valid_statuses = ['IN_PROGRESS', 'COMPLETED', 'CANCELLED']
+    if new_status in valid_statuses:
+        appointment.status = new_status
+        appointment.save()
+        messages.success(request, f"Appointment status updated to {appointment.get_status_display()}.")
+    return redirect('manage_appointments')
+
+@login_required
+@role_required('SERVICE_CENTER')
+def manage_orders(request):
+    center = getattr(request.user, 'service_center_profile', None)
+    orders = PartOrder.objects.filter(service_center=center).order_by('-ordered_at')
+    return render(request, 'service/orders.html', {'orders': orders})
+
+@login_required
+@role_required('SERVICE_CENTER')
+def warranty_list(request):
+    center = getattr(request.user, 'service_center_profile', None)
+    warranties = WarrantyClaim.objects.filter(service_center=center).order_by('-created_at')
+    return render(request, 'service/warranties.html', {'warranties': warranties})
+
+@login_required
+@role_required('SERVICE_CENTER')
+def update_warranty_status(request, pk, new_status):
+    center = getattr(request.user, 'service_center_profile', None)
+    claim = get_object_or_404(WarrantyClaim, pk=pk, service_center=center)
+    if new_status in ['APPROVED', 'REJECTED']:
+        claim.status = new_status
+        claim.save()
+        messages.success(request, f"Warranty claim {new_status.lower()}.")
+    return redirect('warranty_list')
+
+@login_required
+@role_required('SERVICE_CENTER')
+def service_reports(request):
+    center = getattr(request.user, 'service_center_profile', None)
+    
+    completed_repairs = Appointment.objects.filter(service_center=center, status='COMPLETED')
+    total_repairs = completed_repairs.count()
+    # Assuming your RepairAppointment has a 'cost' field. If not, remove this line.
+    # total_revenue = completed_repairs.aggregate(Sum('cost'))['cost__sum'] or 0.00
+    total_revenue = 0.00 # Placeholder: Update with your actual cost logic
+    
+    active_warranties = WarrantyClaim.objects.filter(service_center=center, status='PENDING').count()
+    
+    return render(request, 'service/reports.html', {
+        'total_repairs': total_repairs,
+        'total_revenue': total_revenue,
+        'active_warranties': active_warranties
+    })
+    
+    from django.contrib.auth import get_user_model
+from .forms import DeliveryPartnerCreationForm
+
+User = get_user_model()
+
+@login_required
+@role_required('SERVICE_CENTER')
+def manage_delivery_partners(request):
+    # Fetch all users who have the DELIVERY_PARTNER role
+    partners = User.objects.filter(role='DELIVERY_PARTNER').order_by('-date_joined')
+    return render(request, 'service/delivery_partners.html', {'partners': partners})
+
+@login_required
+@role_required('SERVICE_CENTER')
+def add_delivery_partner(request):
+    if request.method == 'POST':
+        form = DeliveryPartnerCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            # Securely hash the password
+            user.set_password(form.cleaned_data['password'])
+            # FORCIBLY assign the Delivery Partner role (security measure)
+            user.role = 'DELIVERY_PARTNER'
+            user.save()
+            
+            messages.success(request, f"Delivery Partner '{user.username}' created successfully!")
+            return redirect('manage_delivery_partners')
+    else:
+        form = DeliveryPartnerCreationForm()
+        
+    return render(request, 'service/delivery_partner_form.html', {'form': form})

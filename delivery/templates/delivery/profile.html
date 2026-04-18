@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block page_title %}Vehicle Setup{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+    <div class="mb-6 border-b border-gray-200 pb-4">
+        <h2 class="text-2xl font-bold text-gray-900">Delivery Profile & Vehicle</h2>
+        <p class="text-sm text-gray-500">Keep your vehicle details and working status up to date.</p>
+    </div>
+    
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 gap-4">
+            {{ form.as_p }}
+        </div>
+        
+        <div class="pt-6 mt-2 border-t border-gray-100 flex space-x-3">
+            <button type="submit" class="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm">
+                Save Details
+            </button>
+            <a href="{% url 'delivery_dashboard' %}" class="px-6 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 transition">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

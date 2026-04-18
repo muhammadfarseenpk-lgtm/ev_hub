@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block page_title %}Onboard Delivery Partner{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+    <div class="mb-6 border-b border-gray-200 pb-4">
+        <h2 class="text-2xl font-bold text-gray-900">Create Partner Account</h2>
+        <p class="text-sm text-gray-500">Generate secure login credentials for a new driver.</p>
+    </div>
+    
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        {{ form.as_p }}
+        
+        <div class="pt-6 flex space-x-3">
+            <button type="submit" class="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm">
+                Create Account
+            </button>
+            <a href="{% url 'manage_delivery_partners' %}" class="px-6 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 transition">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

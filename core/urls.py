@@ -1,16 +1,20 @@
 # core/urls.py
-from django.contrib import admin
 from django.urls import path, include
-from . import views  # <-- Import the core views we made in Step 11
+from django.contrib import admin
+from . import views
+from accounts import views as account_views  # This fixes the NameError
 
 urlpatterns = [
+    # Main Homepage
+    path('', views.landing_page, name='landing'),
     path('admin/', admin.site.urls),
     
-    # The missing root homepage path!
-    path('', views.home, name='home'), 
+    # Auth Routes
+    path('login/', account_views.login_view, name='login'), 
+    path('register/', account_views.register_view, name='register'),
     
     # Platform Apps
-    path('', include('accounts.urls')), # Handles /login/ and /register/
+    path('accounts/', include('accounts.urls')), 
     path('owner/', include('owner.urls')),
     path('station/', include('station.urls')),
     path('bookings/', include('bookings.urls')),
@@ -20,7 +24,7 @@ urlpatterns = [
     path('notifications/', include('notifications.urls')),
 ]
 
-# Custom Error Handlers (From Step 11)
+# Custom Error Handlers
 handler404 = 'core.views.custom_404'
 handler500 = 'core.views.custom_500'
 handler403 = 'core.views.custom_403'

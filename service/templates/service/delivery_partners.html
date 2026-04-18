@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block page_title %}Delivery Partners{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="mb-6 flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">Delivery Partners</h2>
+            <p class="text-sm text-gray-500">Manage drivers assigned to your service center.</p>
+        </div>
+        <a href="{% url 'add_delivery_partner' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm">
+            + Onboard New Partner
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <table class="w-full text-left whitespace-nowrap">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="p-4 font-semibold text-gray-600">Username</th>
+                    <th class="p-4 font-semibold text-gray-600">Full Name</th>
+                    <th class="p-4 font-semibold text-gray-600">Email</th>
+                    <th class="p-4 font-semibold text-gray-600">Date Joined</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for partner in partners %}
+                <tr class="hover:bg-gray-50">
+                    <td class="p-4 font-bold text-gray-900">{{ partner.username }}</td>
+                    <td class="p-4 text-gray-700">{{ partner.get_full_name|default:"-" }}</td>
+                    <td class="p-4 text-gray-500">{{ partner.email }}</td>
+                    <td class="p-4 text-gray-500">{{ partner.date_joined|date:"M d, Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="p-10 text-center text-gray-500">
+                        No delivery partners onboarded yet. Click the button above to create one.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

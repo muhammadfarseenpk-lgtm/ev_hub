@@ -23,3 +23,4 @@ class Charger(models.Model):
     connector_type = models.CharField(max_length=100)
     status = models.CharField(max_length=20, choices=StatusChoices.choices, default=StatusChoices.AVAILABLE)
     dynamic_price_per_kwh = models.DecimalField(max_digits=5, decimal_places=2)
+    

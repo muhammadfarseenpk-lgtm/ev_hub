@@ -16,4 +16,11 @@ urlpatterns = [
     
     # EV Owner Browsing
     path('browse/', views.browse_stations, name='browse_stations'),
+    
+    # Booking Management
+    path('bookings/', views.operator_booking_list, name='operator_booking_list'),
+    path('bookings/<int:booking_id>/status/<str:new_status>/', views.update_booking_status, name='update_booking_status'),
+    
+    # Reports
+    path('reports/', views.operator_reports, name='operator_reports'),
 ]
