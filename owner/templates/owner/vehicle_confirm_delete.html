@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block page_title %}Remove Vehicle{% endblock %}
+
+{% block content %}
+<div class="max-w-md bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+    <h3 class="text-lg font-bold text-gray-900 mb-4">Are you sure?</h3>
+    <p class="text-gray-600 mb-6">You are about to remove your <strong>{{ vehicle.make }} {{ vehicle.model }}</strong> ({{ vehicle.registration_number }}). This action cannot be undone.</p>
+    
+    <form method="post" class="flex justify-end space-x-4">
+        {% csrf_token %}
+        <a href="{% url 'owner_vehicle_list' %}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</a>
+        <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">Yes, Remove Vehicle</button>
+    </form>
+</div>
+{% endblock %}

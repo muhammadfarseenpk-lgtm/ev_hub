@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block page_title %}Booking Requests{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm border border-gray-200">
+    <div class="p-6">
+        <h3 class="font-bold text-lg mb-4">Manage Bookings</h3>
+        <div class="space-y-4">
+            {% for booking in bookings %}
+            <div class="flex flex-col md:flex-row justify-between md:items-center p-4 border rounded-lg {% if booking.status == 'PENDING' %}bg-yellow-50 border-yellow-200{% endif %}">
+                <div class="mb-2 md:mb-0">
+                    <p class="font-medium">User: {{ booking.user.get_full_name|default:booking.user.username }}</p>
+                    <p class="text-sm text-gray-500">Charger: {{ booking.charger.charger_id_string }}</p>
+                    <p class="text-sm text-gray-500">{{ booking.start_time|date:"M d, Y h:i A" }} - {{ booking.end_time|date:"h:i A" }}</p>
+                </div>
+                <div class="flex flex-col items-end space-y-2">
+                    <span class="font-medium text-sm">Est. Revenue: ${{ booking.total_cost }}</span>
+                    {% if booking.status == 'PENDING' %}
+                    <div class="flex space-x-2">
+                        <a href="{% url 'update_booking_status' booking.id 'approve' %}" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Approve</a>
+                        <a href="{% url 'update_booking_status' booking.id 'reject' %}" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">Reject</a>
+                    </div>
+                    {% else %}
+                    <span class="px-2 py-1 text-xs rounded-full font-semibold bg-gray-100 text-gray-800">
+                        {{ booking.get_status_display }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-8 text-gray-500">
+                No bookings have been made at your station yet.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

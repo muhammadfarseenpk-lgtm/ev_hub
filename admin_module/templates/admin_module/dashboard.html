@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block page_title %}Platform Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="grid gap-6 md:grid-cols-3 mb-6">
+    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <h3 class="text-sm font-medium text-gray-500">Total Users</h3>
+        <p class="text-3xl font-bold mt-2 text-blue-600">{{ total_users }}</p>
+    </div>
+    
+    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <h3 class="text-sm font-medium text-gray-500">Pending Approvals</h3>
+        <p class="text-3xl font-bold mt-2 {% if pending_approvals > 0 %}text-yellow-600{% else %}text-green-600{% endif %}">
+            {{ pending_approvals }}
+        </p>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <h3 class="text-sm font-medium text-gray-500">Total Revenue Volume</h3>
+        <p class="text-3xl font-bold mt-2 text-gray-900">${{ revenue_stats }}</p>
+    </div>
+</div>
+
+<div class="flex space-x-4 mb-6">
+    <a href="{% url 'admin_create_role' %}" class="bg-gray-900 text-white px-4 py-2 rounded shadow hover:bg-gray-800">
+        + Create Operator / Service Center
+    </a>
+    <a href="{% url 'admin_users' %}" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded shadow-sm hover:bg-gray-50">
+        Manage All Users
+    </a>
+</div>
+{% endblock %}

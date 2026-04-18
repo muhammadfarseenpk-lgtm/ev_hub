@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block page_title %}My Bookings{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm border border-gray-200">
+    <div class="p-6">
+        <h3 class="font-bold text-lg mb-4">Upcoming & Past Bookings</h3>
+        <div class="space-y-4">
+            {% for booking in bookings %}
+            <div class="flex flex-col md:flex-row justify-between md:items-center p-4 border rounded-lg">
+                <div class="mb-2 md:mb-0">
+                    <p class="font-medium">{{ booking.charger.station.name }}</p>
+                    <p class="text-sm text-gray-500">Charger: {{ booking.charger.charger_id_string }} ({{ booking.charger.power_kw }}kW)</p>
+                    <p class="text-sm text-gray-500">{{ booking.start_time|date:"M d, Y h:i A" }} - {{ booking.end_time|date:"h:i A" }}</p>
+                </div>
+                <div class="flex flex-col items-end space-y-2">
+                    <p class="font-bold">${{ booking.total_cost|default:"0.00" }}</p>
+                    <span class="px-2 py-1 text-xs rounded-full font-semibold
+                        {% if booking.status == 'APPROVED' %}bg-blue-100 text-blue-800
+                        {% elif booking.status == 'PENDING' %}bg-yellow-100 text-yellow-800
+                        {% elif booking.status == 'CANCELLED' or booking.status == 'REJECTED' %}bg-red-100 text-red-800
+                        {% else %}bg-green-100 text-green-800{% endif %}">
+                        {{ booking.get_status_display }}
+                    </span>
+                    {% if booking.status == 'PENDING' or booking.status == 'APPROVED' %}
+                        <form method="post" action="{% url 'cancel_booking' booking.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="text-sm text-red-600 hover:underline">Cancel Booking</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-8 text-gray-500">
+                You have no booking history. Browse stations to make your first booking.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

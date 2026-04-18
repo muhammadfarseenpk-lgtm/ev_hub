@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block page_title %}Warranty Claims{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+        <h3 class="font-bold text-lg">Pending & Processed Claims</h3>
+    </div>
+    <div class="p-0">
+        {% for claim in claims %}
+        <div class="flex flex-col md:flex-row justify-between md:items-start p-6 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+            <div class="mb-4 md:mb-0 max-w-xl">
+                <div class="flex items-center space-x-3 mb-1">
+                    <h4 class="font-bold text-gray-900">{{ claim.part_name }}</h4>
+                    <span class="text-xs text-gray-500 font-medium px-2 py-0.5 bg-gray-100 rounded">Claim #{{ claim.id }}</span>
+                </div>
+                <p class="text-sm text-gray-800 mb-2"><strong>Vehicle:</strong> {{ claim.vehicle.make }} {{ claim.vehicle.model }} ({{ claim.vehicle.registration_number }})</p>
+                <p class="text-sm text-gray-600 bg-gray-50 p-3 border border-gray-200 rounded-md">"{{ claim.issue_description }}"</p>
+                <p class="text-xs text-gray-400 mt-2">Submitted: {{ claim.created_at|date:"M d, Y" }}</p>
+            </div>
+            
+            <div class="flex flex-col items-end space-y-3 min-w-[120px]">
+                <span class="px-3 py-1 text-xs rounded-full font-bold uppercase tracking-wider
+                    {% if claim.status == 'APPROVED' %}bg-green-100 text-green-800
+                    {% elif claim.status == 'REJECTED' %}bg-red-100 text-red-800
+                    {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                    {{ claim.get_status_display }}
+                </span>
+                
+                {% if claim.status == 'PENDING' %}
+                <div class="flex flex-col space-y-2 w-full mt-2">
+                    <a href="{% url 'update_warranty_status' claim.id 'APPROVED' %}" class="text-center bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700 font-medium shadow-sm transition">Validate Claim</a>
+                    <a href="{% url 'update_warranty_status' claim.id 'REJECTED' %}" class="text-center bg-white border border-red-200 text-red-600 px-4 py-2 rounded-md text-sm hover:bg-red-50 font-medium transition">Reject</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="p-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No warranty claims</h3>
+            <p class="mt-1 text-sm text-gray-500">There are currently no warranty claims to process.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block page_title %}Operator Dashboard{% endblock %}
+
+{% block content %}
+
+{% if not station or not station.name %}
+<div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-lg mb-8 shadow-sm">
+    <div class="flex">
+        <div class="ml-3">
+            <h3 class="text-sm font-bold text-yellow-800">Station Setup Required</h3>
+            <p class="text-sm text-yellow-700 mt-1">
+                You have not completed your Station Profile setup. 
+                <a href="{% url 'station_profile' %}" class="font-bold underline">Click here to setup your station</a> 
+                to begin adding chargers and accepting bookings.
+            </p>
+        </div>
+    </div>
+</div>
+{% else %}
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Chargers</h3>
+        <p class="text-3xl font-black mt-2 text-gray-900">{{ chargers.count }}</p>
+    </div>
+    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Today's Bookings</h3>
+        <p class="text-3xl font-black mt-2 text-blue-600">{{ today_bookings_count|default:"0" }}</p>
+    </div>
+    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Daily Revenue</h3>
+        <p class="text-3xl font-black mt-2 text-green-600">₹{{ daily_revenue|default:"0.00" }}</p>
+    </div>
+    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Station Status</h3>
+        <p class="text-lg font-bold mt-2 {% if station.is_active %}text-green-600{% else %}text-red-600{% endif %}">
+            {% if station.is_active %}Live & Active{% else %}Inactive{% endif %}
+        </p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="font-bold text-lg">Charger Status</h3>
+            <a href="{% url 'charger_list' %}" class="text-blue-600 text-sm font-medium hover:underline">Manage All</a>
+        </div>
+        <div class="divide-y divide-gray-100">
+            {% for charger in chargers|slice:":5" %}
+            <div class="p-4 flex justify-between items-center hover:bg-gray-50 transition-colors">
+                <div>
+                    <p class="font-bold text-gray-900">{{ charger.charger_id_string }}</p>
+                    <p class="text-xs text-gray-500">{{ charger.power_kw }} kW • {{ charger.connector_type }}</p>
+                </div>
+                <span class="text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-wider
+                    {% if charger.status == 'AVAILABLE' %}bg-green-100 text-green-800
+                    {% elif charger.status == 'IN_USE' %}bg-blue-100 text-blue-800
+                    {% else %}bg-red-100 text-red-800{% endif %}">
+                    {{ charger.get_status_display }}
+                </span>
+            </div>
+            {% empty %}
+            <div class="p-8 text-center text-gray-500 text-sm">
+                No chargers found. <a href="{% url 'charger_create' %}" class="text-blue-600 underline">Add one now</a>.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="font-bold text-lg">Pending Requests</h3>
+            <a href="{% url 'operator_booking_list' %}" class="text-blue-600 text-sm font-medium hover:underline">View All</a>
+        </div>
+        <div class="p-6">
+            {% if pending_bookings %}
+                <ul class="space-y-4">
+                    {% for booking in pending_bookings|slice:":4" %}
+                    <li class="flex justify-between items-center pb-4 border-b last:border-0 last:pb-0 border-gray-100">
+                        <div>
+                            <p class="font-medium text-sm">{{ booking.user.username }}</p>
+                            <p class="text-xs text-gray-500">{{ booking.start_time|date:"M d, H:i" }}</p>
+                        </div>
+                        <a href="{% url 'operator_booking_list' %}" class="text-xs bg-gray-100 px-3 py-1 rounded hover:bg-gray-200 font-medium">Review</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-sm text-gray-500 text-center py-4">No pending requests right now.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

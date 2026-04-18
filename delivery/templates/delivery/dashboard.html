@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block page_title %}Delivery Dashboard{% endblock %}
+
+{% block content %}
+<div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-xl font-bold text-gray-900">Welcome, {{ partner.user.get_full_name|default:partner.user.username }}</h2>
+        <p class="text-sm text-gray-500">Vehicle: {{ partner.vehicle_number }}</p>
+    </div>
+    <div class="text-right">
+        <p class="text-sm text-gray-500 uppercase tracking-wide font-bold">Lifetime Deliveries</p>
+        <p class="text-3xl font-black text-blue-600">{{ completed_count }}</p>
+    </div>
+</div>
+
+<h3 class="font-bold text-lg mb-4 text-gray-800">Active Assignments</h3>
+
+<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    {% for order in active_orders %}
+    <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden flex flex-col">
+        <div class="p-4 border-b border-gray-100 flex justify-between items-center 
+            {% if order.status == 'IN_TRANSIT' %}bg-blue-50{% else %}bg-gray-50{% endif %}">
+            <span class="font-bold text-gray-900">Order #{{ order.id }}</span>
+            <span class="px-2 py-1 text-xs rounded-full font-bold
+                {% if order.status == 'IN_TRANSIT' %}bg-blue-200 text-blue-800
+                {% else %}bg-yellow-200 text-yellow-800{% endif %}">
+                {{ order.get_status_display }}
+            </span>
+        </div>
+        
+        <div class="p-4 flex-1">
+            <p class="text-xs text-gray-500 font-bold uppercase mb-1">Deliver To</p>
+            <p class="text-sm text-gray-800 mb-4">{{ order.destination_address }}</p>
+            
+            <a href="https://maps.google.com/?q={{ order.destination_address|urlencode }}" target="_blank" class="w-full flex items-center justify-center bg-gray-100 text-gray-700 py-2 rounded-md hover:bg-gray-200 transition font-medium text-sm">
+                <svg class="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Open in Google Maps
+            </a>
+        </div>
+
+        <div class="p-4 bg-gray-50 border-t border-gray-100">
+            {% if order.status == 'ASSIGNED' %}
+                <a href="{% url 'update_delivery_status' order.id 'IN_TRANSIT' %}" class="block w-full text-center bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition font-bold shadow-sm">
+                    Mark as Picked Up
+                </a>
+            {% elif order.status == 'IN_TRANSIT' %}
+                <div class="flex space-x-2">
+                    <a href="{% url 'update_delivery_status' order.id 'DELIVERED' %}" class="flex-1 text-center bg-green-600 text-white py-2.5 rounded-lg hover:bg-green-700 transition font-bold shadow-sm">
+                        Confirm Delivered
+                    </a>
+                    <a href="{% url 'update_delivery_status' order.id 'FAILED' %}" class="text-center bg-white border border-red-200 text-red-600 px-4 py-2.5 rounded-lg hover:bg-red-50 transition font-bold" onclick="return confirm('Mark this delivery as failed?');">
+                        Fail
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full bg-white p-12 text-center rounded-xl border border-gray-200">
+        <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+        <h3 class="text-lg font-medium text-gray-900">No Active Deliveries</h3>
+        <p class="text-gray-500">You are all caught up! Wait for a Service Center to assign parts.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

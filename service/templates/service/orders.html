@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block page_title %}Manage Part Orders{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
+        <h3 class="font-bold text-lg mb-4">Dispatch Delivery Partner</h3>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Select Available Partner</label>
+                <select name="partner_id" class="w-full px-4 py-2 border rounded-md focus:ring-blue-500" required>
+                    <option value="">-- Choose Partner --</option>
+                    {% for partner in partners %}
+                        <option value="{{ partner.id }}">{{ partner.user.get_full_name|default:partner.user.username }} ({{ partner.vehicle_number }})</option>
+                    {% empty %}
+                        <option value="" disabled>No partners currently available</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Pickup/Destination Address</label>
+                <textarea name="destination_address" class="w-full px-4 py-2 border rounded-md focus:ring-blue-500" rows="3" required placeholder="Where should they pick up the part?"></textarea>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 font-medium">Create Order</button>
+        </form>
+    </div>
+
+    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200">
+        <div class="p-6 border-b border-gray-200">
+            <h3 class="font-bold text-lg">Active & Recent Orders</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 border-b border-gray-200 text-sm text-gray-500">
+                        <th class="p-4 font-medium">Order ID</th>
+                        <th class="p-4 font-medium">Partner</th>
+                        <th class="p-4 font-medium">Destination</th>
+                        <th class="p-4 font-medium text-right">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="p-4 font-medium text-gray-900">#{{ order.id }}</td>
+                        <td class="p-4">{{ order.partner.user.username }}</td>
+                        <td class="p-4 text-sm text-gray-600 truncate max-w-xs">{{ order.destination_address }}</td>
+                        <td class="p-4 text-right">
+                            <span class="px-2 py-1 text-xs rounded font-semibold
+                                {% if order.status == 'DELIVERED' %}bg-green-100 text-green-800
+                                {% elif order.status == 'IN_TRANSIT' %}bg-blue-100 text-blue-800
+                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="p-8 text-center text-gray-500">No orders have been dispatched yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

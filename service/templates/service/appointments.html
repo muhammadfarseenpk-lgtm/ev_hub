@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block page_title %}Repair Appointments{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm border border-gray-200">
+    <div class="p-6">
+        <div class="space-y-4">
+            {% for appt in appointments %}
+            <div class="flex flex-col md:flex-row justify-between md:items-center p-4 border rounded-lg">
+                <div class="mb-2 md:mb-0">
+                    <p class="font-medium text-lg">{{ appt.vehicle.make }} {{ appt.vehicle.model }}</p>
+                    <p class="text-sm text-gray-600"><strong>Owner:</strong> {{ appt.vehicle.user.get_full_name|default:appt.vehicle.user.username }}</p>
+                    <p class="text-sm text-gray-600"><strong>Issue:</strong> {{ appt.issue_description }}</p>
+                    <p class="text-sm text-gray-500 mt-1">Date: {{ appt.scheduled_time|date:"M d, Y h:i A" }}</p>
+                </div>
+                <div class="flex flex-col items-end space-y-2">
+                    <span class="px-2 py-1 text-xs rounded-full font-semibold
+                        {% if appt.status == 'COMPLETED' %}bg-green-100 text-green-800
+                        {% elif appt.status == 'IN_PROGRESS' %}bg-blue-100 text-blue-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ appt.get_status_display }}
+                    </span>
+                    
+                    {% if appt.status == 'SCHEDULED' %}
+                        <a href="{% url 'update_appointment_status' appt.id 'IN_PROGRESS' %}" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">Start Repair</a>
+                    {% elif appt.status == 'IN_PROGRESS' %}
+                        <a href="{% url 'update_appointment_status' appt.id 'COMPLETED' %}" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Mark Completed</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-8 text-gray-500">
+                No active appointments.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

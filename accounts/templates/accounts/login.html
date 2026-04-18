@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - EV Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .modern-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .modern-input:focus {
+            background-color: #ffffff;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center py-12">
+    
+    <div class="w-full max-w-md bg-white rounded-[2rem] shadow-xl p-8 mx-4 border border-gray-100">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-900">Login Form</h2>
+        </div>
+        
+        <div class="flex bg-gray-50 border border-gray-200 rounded-full p-1 mb-8 shadow-inner">
+            <div class="w-1/2 text-center py-2.5 rounded-full bg-blue-600 text-white font-medium shadow-md cursor-default">
+                Login
+            </div>
+            <a href="{% url 'register' %}" class="w-1/2 text-center py-2.5 rounded-full text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                Signup
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 p-3 rounded text-sm {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-100{% else %}bg-blue-50 text-blue-700 border border-blue-100{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1 pl-1">Username</label>
+                <input type="text" name="username" class="modern-input" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1 pl-1">Password</label>
+                <input type="password" name="password" class="modern-input" required>
+            </div>
+            
+            <div class="text-left mt-2">
+                <a href="#" class="text-sm text-blue-600 hover:underline font-medium pl-1">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 text-white py-3.5 rounded-xl hover:bg-blue-700 transition-colors font-semibold text-lg mt-2 shadow-md">
+                Login
+            </button>
+        </form>
+        
+        <p class="mt-8 text-center text-sm text-gray-600">
+            Not a member? <a href="{% url 'register' %}" class="text-blue-600 font-medium hover:underline">Signup now</a>
+        </p>
+    </div>
+</body>
+</html>

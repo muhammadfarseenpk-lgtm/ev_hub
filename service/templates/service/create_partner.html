@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block page_title %}Create Delivery Partner{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+    <div class="mb-6 pb-4 border-b">
+        <h3 class="text-lg font-bold">New Delivery Partner Account</h3>
+        <p class="text-sm text-gray-500">Generate an account for a new delivery driver.</p>
+    </div>
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        <div class="grid grid-cols-2 gap-6">
+            {% for field in form %}
+            <div class="col-span-2 sm:col-span-1">
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ field.errors.0 }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        <div class="flex justify-end space-x-4 pt-4 border-t mt-6">
+            <a href="{% url 'service_dashboard' %}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</a>
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">Create Account</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
