@@ -6,8 +6,10 @@ from django.db.models import Sum
 from accounts.decorators import role_required
 from accounts.models import User
 from bookings.models import Booking
-from .models import Complaint, SystemLog
+from .models import SupportTicket, SystemLog
 from .forms import AdminRoleCreationForm
+from django.contrib.auth import get_user_model
+from .models import SupportTicket, SystemLog
 
 @login_required
 @role_required('ADMIN')
@@ -132,3 +134,44 @@ def user_management(request):
         'roles': User.RoleChoices.choices,
     }
     return render(request, 'admin_module/users.html', context)
+
+User = get_user_model()
+
+@login_required
+@role_required('ADMIN')
+def admin_dashboard(request):
+    # Calculate stats for the dashboard widgets
+    total_users = User.objects.count()
+    owners_count = User.objects.filter(role='EV_OWNER').count()
+    operators_count = User.objects.filter(role='STATION_OPERATOR').count()
+    services_count = User.objects.filter(role='SERVICE_CENTER').count()
+    
+    open_tickets = SupportTicket.objects.filter(status='OPEN').count()
+    
+    return render(request, 'admin_module/dashboard.html', {
+        'total_users': total_users,
+        'owners_count': owners_count,
+        'operators_count': operators_count,
+        'services_count': services_count,
+        'open_tickets': open_tickets,
+    })
+
+@login_required
+@role_required('ADMIN')
+def user_management(request):
+    # Fetch all users except other superadmins
+    users = User.objects.exclude(is_superuser=True).order_by('-date_joined')
+    return render(request, 'admin_module/users.html', {'users': users})
+
+@login_required
+@role_required('ADMIN')
+def toggle_user_status(request, user_id):
+    target_user = get_object_or_404(User, id=user_id)
+    
+    # Toggle the is_active Boolean
+    target_user.is_active = not target_user.is_active
+    target_user.save()
+    
+    status = "unblocked" if target_user.is_active else "blocked"
+    messages.success(request, f"User '{target_user.username}' has been successfully {status}.")
+    return redirect('user_management')

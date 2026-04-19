@@ -2,52 +2,48 @@
 {% block page_title %}User Management{% endblock %}
 
 {% block content %}
-<div class="bg-white rounded-xl shadow-sm border border-gray-200">
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+        <h3 class="font-bold text-lg">All Platform Users</h3>
+    </div>
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-gray-50 border-b border-gray-200 text-sm text-gray-500">
-                    <th class="p-4 font-medium">Username</th>
-                    <th class="p-4 font-medium">Role</th>
-                    <th class="p-4 font-medium">Status</th>
-                    <th class="p-4 font-medium text-right">Actions</th>
+        <table class="w-full text-left whitespace-nowrap">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="p-4 font-semibold text-gray-600">Username</th>
+                    <th class="p-4 font-semibold text-gray-600">Role</th>
+                    <th class="p-4 font-semibold text-gray-600">Joined</th>
+                    <th class="p-4 font-semibold text-gray-600">Status</th>
+                    <th class="p-4 font-semibold text-gray-600 text-right">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-gray-100">
                 {% for target_user in users %}
-                <tr class="border-b border-gray-100 hover:bg-gray-50">
-                    <td class="p-4">
-                        <p class="font-medium text-gray-900">{{ target_user.username }}</p>
-                        <p class="text-xs text-gray-500">{{ target_user.email }}</p>
+                <tr class="hover:bg-gray-50 {% if not target_user.is_active %}bg-red-50{% endif %}">
+                    <td class="p-4 font-bold text-gray-900">
+                        {{ target_user.username }}<br>
+                        <span class="text-xs text-gray-500 font-normal">{{ target_user.email }}</span>
                     </td>
+                    <td class="p-4 text-gray-700">{{ target_user.get_role_display }}</td>
+                    <td class="p-4 text-gray-500">{{ target_user.date_joined|date:"M d, Y" }}</td>
                     <td class="p-4">
-                        <span class="px-2 py-1 text-xs rounded border border-gray-300 bg-gray-100">
-                            {{ target_user.get_role_display }}
-                        </span>
-                    </td>
-                    <td class="p-4">
-                        {% if not target_user.is_approved %}
-                            <span class="text-xs font-semibold text-yellow-600 bg-yellow-100 px-2 py-1 rounded">Pending</span>
-                        {% elif not target_user.is_active %}
-                            <span class="text-xs font-semibold text-red-600 bg-red-100 px-2 py-1 rounded">Blocked</span>
-                        {% else %}
-                            <span class="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded">Active</span>
-                        {% endif %}
-                    </td>
-                    <td class="p-4 text-right space-x-2">
-                        {% if not target_user.is_approved %}
-                            <a href="{% url 'toggle_user_status' target_user.id 'approve' %}" class="text-xs bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700">Approve</a>
-                        {% endif %}
-                        
                         {% if target_user.is_active %}
-                            <a href="{% url 'toggle_user_status' target_user.id 'block' %}" class="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded hover:bg-red-200">Block</a>
+                            <span class="px-2 py-1 text-xs rounded-full font-bold uppercase bg-green-100 text-green-800">Active</span>
                         {% else %}
-                            <a href="{% url 'toggle_user_status' target_user.id 'unblock' %}" class="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded hover:bg-blue-200">Unblock</a>
+                            <span class="px-2 py-1 text-xs rounded-full font-bold uppercase bg-red-100 text-red-800">Blocked</span>
                         {% endif %}
+                    </td>
+                    <td class="p-4 text-right">
+                        <form method="post" action="{% url 'toggle_user_status' target_user.id %}">
+                            {% csrf_token %}
+                            {% if target_user.is_active %}
+                                <button type="submit" onclick="return confirm('Are you sure you want to block this user?');" class="text-xs border border-red-200 text-red-600 px-3 py-1.5 rounded font-bold hover:bg-red-50 transition">Block User</button>
+                            {% else %}
+                                <button type="submit" class="text-xs bg-green-600 text-white px-3 py-1.5 rounded font-bold hover:bg-green-700 transition">Unblock User</button>
+                            {% endif %}
+                        </form>
                     </td>
                 </tr>
-                {% empty %}
-                <tr><td colspan="4" class="p-8 text-center text-gray-500">No users found.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

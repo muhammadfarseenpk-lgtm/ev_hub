@@ -11,4 +11,6 @@ urlpatterns = [
     path('profile/', views.profile_view, name='owner_profile'),
     path('', views.owner_dashboard, name='owner_dashboard'),
     path('vehicles/', views.vehicle_list, name='owner_vehicle_list'),
+    path('my-repairs/', views.owner_service_dashboard, name='owner_service_dashboard'),
+    path('station/<int:station_id>/review/', views.submit_review, name='submit_review'),
 ]

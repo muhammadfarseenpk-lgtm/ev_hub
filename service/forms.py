@@ -57,3 +57,16 @@ class DeliveryPartnerCreationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs.update({'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'})
+            
+            from .models import Inventory # Make sure Inventory is imported at the top!
+
+class InventoryForm(forms.ModelForm):
+    class Meta:
+        model = Inventory
+        # We exclude 'service_center' because we will set it automatically in the view
+        fields = ['part_name', 'stock_quantity', 'reorder_threshold']
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'w-full p-2 border border-gray-300 rounded-lg mb-3 focus:ring-blue-500 focus:border-blue-500'})

@@ -20,7 +20,7 @@
             <tbody class="divide-y divide-gray-100">
                 {% for appt in appointments %}
                 <tr class="hover:bg-gray-50">
-                    <td class="p-4 font-medium text-gray-900">{{ appt.vehicle.owner.get_full_name|default:appt.vehicle.owner.username }}</td>
+                    <td class="p-4 font-medium text-gray-900">{{ appt.vehicle.user.get_full_name|default:appt.vehicle.user.username }}</td>
                     <td class="p-4 text-gray-700">{{ appt.vehicle.make }} {{ appt.vehicle.model }}</td>
                     <td class="p-4 text-gray-700 font-medium">{{ appt.scheduled_time|date:"M d, Y - H:i" }}</td>
                     <td class="p-4 text-gray-500 text-sm truncate max-w-xs">{{ appt.issue_description }}</td>

@@ -1,12 +1,6 @@
 # notifications/context_processors.py
-from .models import Notification
-
-def user_notifications(request):
+def unread_count(request):
     if request.user.is_authenticated:
-        unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
-        recent_notifications = Notification.objects.filter(user=request.user)[:5]
-        return {
-            'unread_notifications_count': unread_count,
-            'recent_notifications': recent_notifications
-        }
-    return {}
+        count = request.user.notifications.filter(is_read=False).count()
+        return {'unread_notifications_count': count}
+    return {'unread_notifications_count': 0}

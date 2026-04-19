@@ -1,6 +1,8 @@
 # station/models.py
 from django.db import models
 from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator
+
 
 class ChargingStation(models.Model):
     operator = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='station_profile')
@@ -17,10 +19,21 @@ class Charger(models.Model):
         MAINTENANCE = 'MAINTENANCE', 'Under Maintenance'
         FAULTED = 'FAULTED', 'Faulted'
 
-    station = models.ForeignKey(ChargingStation, on_delete=models.CASCADE, related_name='chargers')
+    station = models.ForeignKey('ChargingStation', on_delete=models.CASCADE, related_name='reviews')
     charger_id_string = models.CharField(max_length=50, unique=True)
     power_kw = models.DecimalField(max_digits=6, decimal_places=2)
     connector_type = models.CharField(max_length=100)
     status = models.CharField(max_length=20, choices=StatusChoices.choices, default=StatusChoices.AVAILABLE)
     dynamic_price_per_kwh = models.DecimalField(max_digits=5, decimal_places=2)
-    
+     
+class StationReview(models.Model):
+    # Change it to your actual model name, e.g., 'ChargingStation'
+    station = models.ForeignKey('ChargingStation', on_delete=models.CASCADE, related_name='station_reviews')
+    # ... rest of the code ...
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.rating} Stars - {self.station.name} by {self.user.username}"

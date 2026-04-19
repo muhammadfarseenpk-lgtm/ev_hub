@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block page_title %}Rate Station{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">Rate {{ station.name }}</h2>
+    <p class="text-gray-500 mb-6">How was your charging experience?</p>
+
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Star Rating (1-5)</label>
+            <select name="rating" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500">
+                <option value="5">⭐⭐⭐⭐⭐ (5/5) - Excellent</option>
+                <option value="4">⭐⭐⭐⭐ (4/5) - Good</option>
+                <option value="3">⭐⭐⭐ (3/5) - Average</option>
+                <option value="2">⭐⭐ (2/5) - Poor</option>
+                <option value="1">⭐ (1/5) - Terrible</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Comments (Optional)</label>
+            <textarea name="comment" rows="4" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500" placeholder="Was the charger fast? Was the area clean?"></textarea>
+        </div>
+
+        <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition">Submit Review</button>
+    </form>
+</div>
+{% endblock %}

@@ -4,8 +4,8 @@ from . import views
 
 urlpatterns = [
     path('', views.admin_dashboard, name='admin_dashboard'),
-    path('users/', views.user_management, name='admin_users'),
-    path('users/<int:user_id>/<str:action>/', views.toggle_user_status, name='toggle_user_status'),
+    path('users/', views.user_management, name='user_management'),
+    path('users/<int:user_id>/toggle/', views.toggle_user_status, name='toggle_user_status'),
     path('roles/create/', views.role_management, name='admin_create_role'),
     path('complaints/', views.complaint_list, name='admin_complaints'),
     path('complaints/<int:pk>/resolve/', views.resolve_complaint, name='resolve_complaint'),

@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from accounts.decorators import role_required
 from .models import ServiceCenter, Appointment, Inventory
 from .forms import ServiceCenterProfileForm, InventoryForm
+from .forms import InventoryForm
 
 @login_required
 @role_required('SERVICE_CENTER')
@@ -338,3 +339,28 @@ def add_delivery_partner(request):
         form = DeliveryPartnerCreationForm()
         
     return render(request, 'service/delivery_partner_form.html', {'form': form})
+
+@login_required
+@role_required('SERVICE_CENTER')
+def inventory_create(request):
+    # Get the service center belonging to the logged-in user
+    center = getattr(request.user, 'service_center_profile', None)
+    
+    if request.method == 'POST':
+        form = InventoryForm(request.POST)
+        if form.is_valid():
+            # Save the form but don't commit to the database yet
+            inventory_item = form.save(commit=False)
+            # Automatically assign it to this specific service center
+            inventory_item.service_center = center
+            # Now save it to the database
+            inventory_item.save()
+            
+            messages.success(request, "Inventory part added successfully!")
+            return redirect('inventory_list') # Ensure this matches your URL name
+    else:
+        # If it's a GET request, just show the empty form
+        form = InventoryForm()
+        
+    # Make sure {'form': form} is passed in the dictionary here!
+    return render(request, 'service/inventory_form.html', {'form': form})

@@ -7,6 +7,9 @@ from django.contrib.auth.forms import PasswordChangeForm
 from accounts.decorators import role_required
 from .models import Vehicle, Wallet
 from .forms import VehicleForm, UserProfileForm
+from service.models import Appointment
+from station.models import ChargingStation, StationReview
+from .models import Vehicle
 
 @login_required
 @role_required('EV_OWNER')
@@ -89,3 +92,56 @@ def profile_view(request):
     pwd_form = PasswordChangeForm(request.user)
     
     return render(request, 'owner/profile.html', {'p_form': p_form, 'pwd_form': pwd_form})
+
+@login_required
+@role_required('EV_OWNER')
+def owner_service_dashboard(request):
+    # Fetch appointments where the vehicle's user is the currently logged-in owner
+    repairs = Appointment.objects.filter(vehicle__user=request.user).order_by('-scheduled_time')
+    return render(request, 'owner/repair_tracking.html', {'repairs': repairs})
+
+@login_required
+@role_required('EV_OWNER')
+def submit_review(request, station_id):
+    # Change Station to ChargingStation here!
+    station = get_object_or_404(ChargingStation, id=station_id)
+    
+    if request.method == 'POST':
+        rating = int(request.POST.get('rating', 5))
+        comment = request.POST.get('comment', '')
+        
+        # Save the review
+        StationReview.objects.create(
+            station=station,
+            user=request.user,
+            rating=rating,
+            comment=comment
+        )
+        messages.success(request, f"Thank you for reviewing {station.name}!")
+        return redirect('browse_stations') # Redirect back to the map/list
+        
+    return render(request, 'owner/submit_review.html', {'station': station})
+
+@login_required
+@role_required('EV_OWNER')
+def owner_dashboard(request):
+    # Fetch user's vehicles
+    my_vehicles = Vehicle.objects.filter(user=request.user)
+    
+    # SMART REMINDER LOGIC: Find cars that need maintenance
+    # Assuming your Vehicle model has an integer field called 'battery_health'
+    maintenance_alerts = []
+    for car in my_vehicles:
+        if getattr(car, 'battery_health', 100) < 85: # If battery health is below 85%
+            maintenance_alerts.append({
+                'car': car,
+                'message': f"Battery health dropped to {car.battery_health}%. A diagnostic is recommended."
+            })
+
+    # ... fetch your other dashboard data (wallet, bookings, etc.) ...
+
+    return render(request, 'owner/dashboard.html', {
+        'vehicles': my_vehicles,
+        'maintenance_alerts': maintenance_alerts, # Pass alerts to template
+        # ... your other context variables ...
+    })
