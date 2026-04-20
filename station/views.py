@@ -16,7 +16,7 @@ from .forms import StationProfileForm, ChargerForm
 def operator_dashboard(request):
     # Try to get the station associated with the operator
     station = getattr(request.user, 'station_profile', None)
-    chargers = station.chargers.all() if station else []
+    chargers = Charger.objects.filter(station=station) if station else []
     
     context = {
         'station': station,
