@@ -11,10 +11,11 @@ from accounts.decorators import role_required
 # Import Models
 from .models import Vehicle, Wallet, StationBooking, ServiceRequest, EmergencySOS, Notification
 from station.models import ChargingStation, StationReview
-from service.models import Appointment
+from service.models import ServiceAppointment
 
 # Import Forms
 from .forms import VehicleForm, StationBookingForm, ServiceRequestForm, UserProfileForm
+
 
 
 # ==========================================
@@ -247,9 +248,9 @@ def add_funds(request):
 @login_required
 @role_required('EV_OWNER')
 def owner_service_dashboard(request):
-    repairs = Appointment.objects.filter(vehicle__user=request.user).order_by('-scheduled_time')
+    # Fetch the ServiceRequests instead of Appointments
+    repairs = ServiceRequest.objects.filter(user=request.user).order_by('-created_at')
     
-    # ADDED: Filter services by status
     status_filter = request.GET.get('status', '')
     if status_filter:
         repairs = repairs.filter(status=status_filter)
@@ -301,14 +302,14 @@ def profile_view(request):
             if p_form.is_valid():
                 p_form.save()
                 messages.success(request, 'Your profile has been updated.')
-                return redirect('owner_profile')
+                return redirect('profile_view')
         elif 'change_password' in request.POST:
             pwd_form = PasswordChangeForm(request.user, request.POST)
             if pwd_form.is_valid():
                 user = pwd_form.save()
                 update_session_auth_hash(request, user)
                 messages.success(request, 'Your password was successfully updated.')
-                return redirect('owner_profile')
+                return redirect('profile_view')
             else:
                 messages.error(request, 'Please correct the error below.')
     
@@ -324,3 +325,31 @@ def notifications_view(request):
     notes.filter(is_read=False).update(is_read=True) # Auto mark as read when viewed
     paginator = Paginator(notes, 15)
     return render(request, 'owner/notifications.html', {'notifications': paginator.get_page(request.GET.get('page'))})
+
+from django.contrib import admin
+from .models import Wallet, Vehicle, StationBooking, ServiceRequest, EmergencySOS, Notification
+
+# Registering models with customized list displays
+@admin.register(Wallet)
+class WalletAdmin(admin.ModelAdmin):
+    list_display = ('user', 'balance', 'last_updated')
+    search_fields = ('user__username',)
+
+@admin.register(Vehicle)
+class VehicleAdmin(admin.ModelAdmin):
+    list_display = ('registration_number', 'user', 'make', 'model', 'battery_level')
+    list_filter = ('make',)
+    search_fields = ('registration_number', 'user__username')
+
+@admin.register(StationBooking)
+class StationBookingAdmin(admin.ModelAdmin):
+    list_display = ('user', 'station', 'date', 'start_time', 'status')
+    list_filter = ('status', 'date')
+    
+@admin.register(ServiceRequest)
+class ServiceRequestAdmin(admin.ModelAdmin):
+    list_display = ('user', 'vehicle', 'service_center', 'status', 'created_at')
+    list_filter = ('status',)
+
+admin.site.register(EmergencySOS)
+admin.site.register(Notification)

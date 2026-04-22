@@ -26,11 +26,12 @@
     </div>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <a href="{% url 'user_management' %}" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:border-blue-300 transition block">
-        <h3 class="font-bold text-lg text-gray-900 mb-1">Manage Users &rarr;</h3>
-        <p class="text-gray-500 text-sm">Approve, reject, block, or unblock accounts across the platform.</p>
+<div class="card" style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-top: 20px;">
+    <a href="{% url 'admin_create_role' %}" style="text-decoration: none; color: inherit; display: block;">
+        <h3 style="margin: 0 0 10px 0; font-size: 16px; font-weight: 600; color: #333;">Create Partner Account &rarr;</h3>
+        <p style="margin: 0; font-size: 14px; color: #666;">Register a new Charging Station Operator or Service Center.</p>
     </a>
+</div>
     <a href="#" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:border-blue-300 transition block">
         <h3 class="font-bold text-lg text-gray-900 mb-1">View Support Tickets &rarr;</h3>
         <p class="text-gray-500 text-sm">Review and resolve user complaints and support requests.</p>

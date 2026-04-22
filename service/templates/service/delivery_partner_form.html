@@ -1,25 +1,37 @@
 {% extends 'base.html' %}
 {% block page_title %}Onboard Delivery Partner{% endblock %}
+{% block header_title %}Create Partner Account{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-200">
-    <div class="mb-6 border-b border-gray-200 pb-4">
-        <h2 class="text-2xl font-bold text-gray-900">Create Partner Account</h2>
-        <p class="text-sm text-gray-500">Generate secure login credentials for a new driver.</p>
-    </div>
-    
-    <form method="post" class="space-y-4">
-        {% csrf_token %}
-        {{ form.as_p }}
-        
-        <div class="pt-6 flex space-x-3">
-            <button type="submit" class="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm">
-                Create Account
-            </button>
-            <a href="{% url 'manage_delivery_partners' %}" class="px-6 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 transition">
-                Cancel
-            </a>
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-[1.5rem] shadow-sm border border-gray-100 relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-32 h-32 bg-purple-50 rounded-bl-[100px] z-0 opacity-50"></div>
+
+    <div class="relative z-10">
+        <div class="mb-8 border-b border-gray-50 pb-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-1">New Delivery Partner</h2>
+            <p class="text-sm text-gray-500">Generate secure login credentials for a new driver.</p>
         </div>
-    </form>
+        
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="space-y-5">
+                {% for field in form %}
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <p class="text-red-500 text-xs mt-1.5 font-medium">{{ field.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="pt-6 mt-8 border-t border-gray-50 flex items-center justify-end space-x-4">
+                <a href="{% url 'manage_delivery_partners' %}" class="px-6 py-3.5 rounded-xl text-sm font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 transition border border-gray-200">Cancel</a>
+                <button type="submit" class="bg-[#8b5cf6] text-white px-8 py-3.5 rounded-xl font-bold hover:bg-purple-600 transition shadow-sm">Create Account</button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

@@ -22,6 +22,8 @@ urlpatterns = [
     path('delivery/', include('delivery.urls')),
     path('platform-admin/', include('admin_module.urls')),
     path('notifications/', include('notifications.urls')),
+    path('about/', views.about_view, name='about'),
+path('contact/', views.contact_view, name='contact'),
 ]
 
 # Custom Error Handlers

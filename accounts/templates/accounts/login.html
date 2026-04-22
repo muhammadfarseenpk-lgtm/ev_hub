@@ -6,41 +6,63 @@
     <title>Login - EV Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body { 
+            font-family: 'Poppins', sans-serif; 
+        }
         .modern-input {
             width: 100%;
-            padding: 0.75rem 1rem;
-            background-color: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.5rem;
+            padding: 0.875rem 1.25rem;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
             outline: none;
             transition: all 0.2s;
+            color: #1e293b;
+            font-size: 0.95rem;
         }
         .modern-input:focus {
             background-color: #ffffff;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center py-12">
+<body class="bg-gray-50 min-h-screen flex items-center justify-center py-12 relative overflow-hidden">
     
-    <div class="w-full max-w-md bg-white rounded-[2rem] shadow-xl p-8 mx-4 border border-gray-100">
+    <div class="absolute top-[-15%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-200 blur-[100px] opacity-60"></div>
+    <div class="absolute bottom-[-15%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-100 blur-[100px] opacity-60"></div>
+
+    <div class="w-full max-w-md glass-card rounded-[2rem] shadow-2xl shadow-purple-900/5 p-8 mx-4 border border-white/60 relative z-10">
+        
+        <div class="flex justify-center mb-6">
+            <div class="bg-purple-50 text-[#8b5cf6] p-4 rounded-2xl shadow-sm border border-purple-100">
+                <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            </div>
+        </div>
+
         <div class="text-center mb-8">
-            <h2 class="text-3xl font-bold text-gray-900">Login Form</h2>
+            <h2 class="text-2xl font-bold text-gray-900">Welcome Back</h2>
+            <p class="text-sm text-gray-500 mt-1">Sign in to your EV Platform account</p>
         </div>
         
-        <div class="flex bg-gray-50 border border-gray-200 rounded-full p-1 mb-8 shadow-inner">
-            <div class="w-1/2 text-center py-2.5 rounded-full bg-blue-600 text-white font-medium shadow-md cursor-default">
+        <div class="flex bg-gray-100/80 border border-gray-200 rounded-2xl p-1.5 mb-8">
+            <div class="w-1/2 text-center py-2.5 rounded-xl bg-white text-[#8b5cf6] font-bold shadow-sm cursor-default transition-all">
                 Login
             </div>
-            <a href="{% url 'register' %}" class="w-1/2 text-center py-2.5 rounded-full text-gray-600 hover:text-gray-900 font-medium transition-colors">
+            <a href="{% url 'register' %}" class="w-1/2 text-center py-2.5 rounded-xl text-gray-500 hover:text-gray-800 font-medium transition-all">
                 Signup
             </a>
         </div>
 
         {% if messages %}
             {% for message in messages %}
-                <div class="mb-4 p-3 rounded text-sm {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-100{% else %}bg-blue-50 text-blue-700 border border-blue-100{% endif %}">
+                <div class="mb-6 p-4 rounded-xl text-sm font-medium {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-100{% else %}bg-purple-50 text-purple-700 border border-purple-100{% endif %}">
                     {{ message }}
                 </div>
             {% endfor %}
@@ -49,25 +71,25 @@
         <form method="post" class="space-y-5">
             {% csrf_token %}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1 pl-1">Username</label>
-                <input type="text" name="username" class="modern-input" required>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5 pl-1">Username</label>
+                <input type="text" name="username" class="modern-input" placeholder="Enter your username" required>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1 pl-1">Password</label>
-                <input type="password" name="password" class="modern-input" required>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5 pl-1">Password</label>
+                <input type="password" name="password" class="modern-input" placeholder="••••••••" required>
             </div>
             
-            <div class="text-left mt-2">
-                <a href="#" class="text-sm text-blue-600 hover:underline font-medium pl-1">Forgot password?</a>
+            <div class="text-right mt-2 pr-1">
+                <a href="#" class="text-sm text-[#8b5cf6] hover:underline font-medium transition-colors">Forgot password?</a>
             </div>
 
-            <button type="submit" class="w-full bg-blue-600 text-white py-3.5 rounded-xl hover:bg-blue-700 transition-colors font-semibold text-lg mt-2 shadow-md">
-                Login
+            <button type="submit" class="w-full bg-[#8b5cf6] text-white py-3.5 rounded-xl hover:bg-purple-600 transition-all font-bold text-[15px] mt-4 shadow-lg shadow-purple-200">
+                Sign In
             </button>
         </form>
         
         <p class="mt-8 text-center text-sm text-gray-600">
-            Not a member? <a href="{% url 'register' %}" class="text-blue-600 font-medium hover:underline">Signup now</a>
+            Don't have an account? <a href="{% url 'register' %}" class="text-[#8b5cf6] font-bold hover:underline transition-colors">Signup now</a>
         </p>
     </div>
 </body>

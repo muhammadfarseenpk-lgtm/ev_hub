@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block page_title %}System Logs{% endblock %}
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="p-6 border-b border-gray-200">
+        <h3 class="font-bold text-lg">System Activity Logs</h3>
+    </div>
+    <div class="divide-y divide-gray-100">
+        {% for log in logs %}
+        <div class="p-4 flex items-start space-x-4 hover:bg-gray-50 transition">
+            <div class="mt-1">
+                <span class="w-2 h-2 rounded-full inline-block bg-blue-500"></span>
+            </div>
+            <div>
+                <p class="font-medium text-gray-900">{{ log.action }}</p>
+                <p class="text-xs text-gray-500 mt-1">{{ log.timestamp|date:"M d, Y - H:i:s" }} | Triggered by: {{ log.user.username|default:"System" }}</p>
+            </div>
+        </div>
+        {% empty %}
+        <div class="p-8 text-center text-gray-500">No system logs recorded yet.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,43 +1,91 @@
 {% extends 'base.html' %}
 {% block page_title %}Profile Management{% endblock %}
+{% block header_title %}Account Profile{% endblock %}
 
 {% block content %}
-<div class="grid gap-6 md:grid-cols-2">
-    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-        <h3 class="text-lg font-bold mb-4">Personal Information</h3>
-        <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="update_profile" value="1">
-            <div class="space-y-4">
-                {% for field in p_form %}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
-                    {{ field }}
+<div class="grid gap-8 md:grid-cols-2 max-w-6xl mx-auto">
+    
+    <div class="bg-white p-8 rounded-[1.5rem] border border-gray-100 shadow-sm relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-purple-50 rounded-bl-[100px] z-0 opacity-50"></div>
+        
+        <div class="relative z-10">
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Personal Information</h3>
+            <p class="text-sm text-gray-500 mb-6">Update your contact details and public profile.</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="update_profile" value="1">
+                <div class="space-y-5">
+                    {% for field in p_form %}
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1.5">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <p class="text-red-500 text-xs mt-1.5">{{ field.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
-            <button type="submit" class="mt-6 w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">Update Profile</button>
-        </form>
+                <button type="submit" class="mt-8 w-full bg-[#8b5cf6] text-white py-3 rounded-xl font-bold hover:bg-purple-600 transition shadow-sm">Save Profile Changes</button>
+            </form>
+        </div>
     </div>
 
-    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-        <h3 class="text-lg font-bold mb-4">Change Password</h3>
-        <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="change_password" value="1">
-            <div class="space-y-4">
-                {% for field in pwd_form %}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ field.errors.0 }}</p>
-                    {% endif %}
+    <div class="bg-white p-8 rounded-[1.5rem] border border-gray-100 shadow-sm relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-bl-[100px] z-0 opacity-50"></div>
+        
+        <div class="relative z-10">
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Security</h3>
+            <p class="text-sm text-gray-500 mb-6">Ensure your account is using a long, random password.</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="change_password" value="1">
+                <div class="space-y-5">
+                    {% for field in pwd_form %}
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1.5">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <p class="text-red-500 text-xs mt-1.5">{{ field.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
-            <button type="submit" class="mt-6 w-full bg-gray-800 text-white py-2 rounded-md hover:bg-gray-900">Update Password</button>
-        </form>
+                <button type="submit" class="mt-8 w-full bg-gray-800 text-white py-3 rounded-xl font-bold hover:bg-gray-900 transition shadow-sm">Update Password</button>
+            </form>
+        </div>
     </div>
 </div>
+
+<style>
+    input[type="text"], input[type="email"], input[type="password"] {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+        background-color: #f9fafb;
+        font-size: 0.875rem;
+        outline: none;
+        transition: all 0.2s ease-in-out;
+    }
+    input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
+        border-color: #8b5cf6;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        background-color: #ffffff;
+    }
+    .helptext {
+        font-size: 0.75rem;
+        color: #9ca3af;
+        margin-top: 0.5rem;
+        display: block;
+    }
+    ul.errorlist {
+        color: #ef4444;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        list-style: none;
+        padding-left: 0;
+    }
+</style>
 {% endblock %}

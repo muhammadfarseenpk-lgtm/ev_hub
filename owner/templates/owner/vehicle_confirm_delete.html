@@ -1,15 +1,28 @@
 {% extends 'base.html' %}
 {% block page_title %}Remove Vehicle{% endblock %}
+{% block header_title %}Remove Vehicle{% endblock %}
 
 {% block content %}
-<div class="max-w-md bg-white p-8 rounded-xl shadow-sm border border-gray-200">
-    <h3 class="text-lg font-bold text-gray-900 mb-4">Are you sure?</h3>
-    <p class="text-gray-600 mb-6">You are about to remove your <strong>{{ vehicle.make }} {{ vehicle.model }}</strong> ({{ vehicle.registration_number }}). This action cannot be undone.</p>
-    
-    <form method="post" class="flex justify-end space-x-4">
+<div class="max-w-md mx-auto bg-white p-8 rounded-[1.5rem] shadow-sm border border-gray-100 relative overflow-hidden">
+    <div class="absolute top-0 left-0 w-full h-1.5 bg-red-500"></div>
+
+    <div class="flex items-center mb-6 mt-2">
+        <div class="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold text-gray-900">Are you absolutely sure?</h3>
+        </div>
+    </div>
+
+    <p class="text-gray-600 mb-8 text-sm leading-relaxed">
+        You are about to remove your <strong class="text-gray-900">{{ vehicle.make }} {{ vehicle.model }}</strong> <span class="font-mono text-xs text-gray-400">({{ vehicle.registration_number }})</span>. This action is permanent and cannot be undone.
+    </p>
+
+    <form method="post" class="flex space-x-4">
         {% csrf_token %}
-        <a href="{% url 'owner_vehicle_list' %}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</a>
-        <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">Yes, Remove Vehicle</button>
+        <a href="{% url 'owner_vehicle_list' %}" class="flex-1 text-center px-4 py-3.5 bg-gray-50 text-gray-600 rounded-xl font-bold hover:bg-gray-100 transition border border-gray-200">Cancel</a>
+        <button type="submit" class="flex-1 bg-red-500 text-white px-4 py-3.5 rounded-xl font-bold hover:bg-red-600 shadow-sm transition">Yes, Remove</button>
     </form>
 </div>
 {% endblock %}

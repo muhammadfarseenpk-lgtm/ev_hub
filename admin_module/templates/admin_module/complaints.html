@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block page_title %}Support Tickets{% endblock %}
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+        <h3 class="font-bold text-lg">User Support Tickets</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left whitespace-nowrap">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="p-4 font-semibold text-gray-600">User</th>
+                    <th class="p-4 font-semibold text-gray-600">Subject</th>
+                    <th class="p-4 font-semibold text-gray-600">Date</th>
+                    <th class="p-4 font-semibold text-gray-600">Status</th>
+                    <th class="p-4 font-semibold text-gray-600 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for ticket in complaints %}
+                <tr class="hover:bg-gray-50">
+                    <td class="p-4 font-bold">{{ ticket.user.username }}</td>
+                    <td class="p-4"><p class="font-medium">{{ ticket.subject }}</p></td>
+                    <td class="p-4 text-sm text-gray-500">{{ ticket.created_at|date:"M d, Y" }}</td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 text-xs rounded-full font-bold uppercase
+                            {% if ticket.status == 'OPEN' %}bg-red-100 text-red-800
+                            {% elif ticket.status == 'RESOLVED' %}bg-green-100 text-green-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ ticket.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="p-4 text-right">
+                        {% if ticket.status == 'OPEN' %}
+                        <a href="{% url 'resolve_complaint' ticket.id %}" class="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 transition">Mark Resolved</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,17 +1,35 @@
 {% extends 'base.html' %}
 {% block page_title %}{{ action }} Charger{% endblock %}
+{% block header_title %}{{ action }} Charger{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-200">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">{{ action }} Charger</h2>
-    
-    <form method="post" class="space-y-4">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <div class="pt-4 flex space-x-3">
-            <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition">Save Charger</button>
-            <a href="{% url 'charger_list' %}" class="px-4 py-2 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 transition">Cancel</a>
-        </div>
-    </form>
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-[1.5rem] shadow-sm border border-gray-100 relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-32 h-32 bg-purple-50 rounded-bl-[100px] z-0 opacity-50"></div>
+
+    <div class="relative z-10">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ action }} Charging Bay</h2>
+        <p class="text-sm text-gray-500 mb-8">Set up the hardware details and current operational status.</p>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="space-y-5">
+                {% for field in form %}
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <p class="text-red-500 text-xs mt-1.5">{{ field.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="pt-6 mt-8 border-t border-gray-50 flex items-center justify-end space-x-4">
+                <a href="{% url 'charger_list' %}" class="px-6 py-3.5 rounded-xl text-sm font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 transition border border-gray-200">Cancel</a>
+                <button type="submit" class="bg-[#8b5cf6] text-white px-8 py-3.5 rounded-xl font-bold hover:bg-purple-600 transition shadow-sm">Save Charger</button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

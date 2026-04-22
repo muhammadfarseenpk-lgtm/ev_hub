@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us | EV Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Poppins', sans-serif; overflow-x: hidden; }
+        
+        @keyframes fade-up {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up { animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        
+        .glass-nav { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.3); }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-[#f8f9fc] text-gray-900 relative">
+
+    <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[50%] rounded-full bg-purple-300 blur-[120px] opacity-40 z-0 pointer-events-none"></div>
+    <div class="absolute top-[40%] right-[-10%] w-[30%] h-[40%] rounded-full bg-blue-200 blur-[120px] opacity-40 z-0 pointer-events-none"></div>
+
+    <nav class="fixed w-full z-50 glass-nav px-6 py-4 md:px-12 flex items-center justify-between">
+        <a href="/" class="flex items-center space-x-3">
+            <div class="bg-purple-100 text-[#8b5cf6] p-2.5 rounded-xl">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            </div>
+            <span class="text-2xl font-extrabold tracking-tight text-gray-900">EV Platform</span>
+        </a>
+        <div class="hidden md:flex items-center space-x-8">
+            <a href="{% url 'about' %}" class="text-[#8b5cf6] font-bold">About</a>
+            <a href="{% url 'contact' %}" class="text-gray-600 font-medium hover:text-[#8b5cf6] transition-colors">Contact Us</a>
+            <div class="w-px h-6 bg-gray-300 mx-2"></div>
+            <a href="{% url 'login' %}" class="text-gray-900 font-bold hover:text-[#8b5cf6] transition-colors">Login</a>
+            <a href="{% url 'register' %}" class="bg-[#8b5cf6] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-purple-600 transition-all shadow-lg shadow-purple-200">Get Started</a>
+        </div>
+    </nav>
+
+    <header class="relative z-10 pt-40 pb-16 px-6 text-center max-w-4xl mx-auto">
+        <h1 class="animate-fade-up text-4xl md:text-6xl font-black text-gray-900 mb-6">Driving the <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#8b5cf6] to-blue-500">EV Revolution</span></h1>
+        <p class="animate-fade-up delay-100 text-lg text-gray-500 leading-relaxed">We are building the world's most connected ecosystem for Electric Vehicle owners, charging stations, and service centers.</p>
+    </header>
+
+    <section class="relative z-10 py-12 px-6 max-w-6xl mx-auto mb-20">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div class="animate-fade-up delay-200">
+                <h2 class="text-3xl font-bold mb-6 text-gray-900">Our Mission</h2>
+                <p class="text-gray-600 mb-4 leading-relaxed">The transition to electric mobility shouldn't be fragmented. EV drivers currently juggle multiple apps for charging, servicing, and emergency assistance.</p>
+                <p class="text-gray-600 leading-relaxed">Our platform bridges the gap, creating a unified network where charging station operators, certified mechanics, and delivery drivers work together to provide a seamless ownership experience.</p>
+                
+                <div class="grid grid-cols-2 gap-6 mt-10">
+                    <div class="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <h4 class="text-3xl font-black text-[#8b5cf6] mb-1">1</h4>
+                        <p class="text-sm font-medium text-gray-500">Active Stations</p>
+                    </div>
+                    <div class="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <h4 class="text-3xl font-black text-blue-500 mb-1">98%</h4>
+                        <p class="text-sm font-medium text-gray-500">Uptime</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="animate-fade-up delay-200 relative h-96 rounded-[2rem] bg-gradient-to-br from-purple-100 to-blue-50 border border-white shadow-xl overflow-hidden flex items-center justify-center">
+                <svg class="w-32 h-32 text-purple-200 opacity-50" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-12 text-center border-t border-gray-200/60 bg-white/50 relative z-10">
+        <p class="text-gray-500 text-sm">&copy; 2026 EV Platform. All rights reserved.</p>
+    </footer>
+</body>
+</html>

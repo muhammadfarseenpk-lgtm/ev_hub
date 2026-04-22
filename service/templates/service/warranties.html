@@ -1,46 +1,62 @@
 {% extends 'base.html' %}
 {% block page_title %}Warranty Claims{% endblock %}
+{% block header_title %}Warranty Validation{% endblock %}
 
 {% block content %}
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-    <div class="p-6 border-b border-gray-200">
-        <h3 class="font-bold text-lg">Validate Warranty Claims</h3>
+<div class="bg-white rounded-[1.5rem] shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-6 border-b border-gray-50 flex justify-between items-center">
+        <div>
+            <h3 class="font-bold text-lg text-gray-900">Warranty Claims</h3>
+            <p class="text-sm text-gray-500">Review and validate customer claims.</p>
+        </div>
     </div>
+
     <div class="overflow-x-auto">
-        <table class="w-full text-left whitespace-nowrap">
-            <thead class="bg-gray-50 border-b border-gray-200">
+        <table class="w-full text-left text-sm text-gray-600">
+            <thead class="bg-gray-50/50 border-b border-gray-100 text-gray-500 uppercase text-[10px] font-bold tracking-wider">
                 <tr>
-                    <th class="p-4 font-semibold text-gray-600">Vehicle</th>
-                    <th class="p-4 font-semibold text-gray-600">Part & Issue</th>
-                    <th class="p-4 font-semibold text-gray-600">Status</th>
-                    <th class="p-4 font-semibold text-gray-600 text-right">Actions</th>
+                    <th class="px-6 py-4">Vehicle</th>
+                    <th class="px-6 py-4">Part & Issue</th>
+                    <th class="px-6 py-4">Status</th>
+                    <th class="px-6 py-4 text-right">Actions</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-gray-50">
                 {% for claim in warranties %}
-                <tr class="hover:bg-gray-50">
-                    <td class="p-4 font-bold text-gray-900">{{ claim.vehicle.registration_number|default:"N/A" }}</td>
-                    <td class="p-4 text-gray-700 truncate max-w-xs">
-                        <span class="font-bold">{{ claim.part_name }}</span><br>
-                        <span class="text-sm text-gray-500">{{ claim.issue_description }}</span>
+                <tr class="hover:bg-gray-50/50 transition">
+                    <td class="px-6 py-4 font-bold text-gray-900">
+                        {{ claim.appointment.vehicle.make }} {{ claim.appointment.vehicle.model }}
                     </td>
-                    <td class="p-4">
-                        <span class="px-2 py-1 text-xs rounded-full font-bold uppercase
-                            {% if claim.status == 'APPROVED' %}bg-green-100 text-green-800
-                            {% elif claim.status == 'REJECTED' %}bg-red-100 text-red-800
-                            {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                    <td class="px-6 py-4">
+                        <p class="font-bold text-gray-900">{{ claim.part_name }}</p>
+                        <p class="text-[10px] text-gray-500 mt-0.5 max-w-xs truncate">{{ claim.details }}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider
+                            {% if claim.status == 'approved' %}bg-green-100 text-green-700
+                            {% elif claim.status == 'rejected' %}bg-red-100 text-red-700
+                            {% else %}bg-yellow-100 text-yellow-700{% endif %}">
                             {{ claim.get_status_display }}
                         </span>
                     </td>
-                    <td class="p-4 text-right space-x-2">
-                        {% if claim.status == 'PENDING' %}
-                        <a href="{% url 'update_warranty_status' claim.id 'APPROVED' %}" class="text-xs bg-green-600 text-white px-3 py-1.5 rounded font-bold hover:bg-green-700 transition">Approve</a>
-                        <a href="{% url 'update_warranty_status' claim.id 'REJECTED' %}" class="text-xs border border-red-200 text-red-600 px-3 py-1.5 rounded font-bold hover:bg-red-50 transition">Reject</a>
+                    <td class="px-6 py-4 text-right space-x-2">
+                        {% if claim.status == 'pending' %}
+                        <a href="{% url 'update_warranty_status' claim.id 'approved' %}" class="inline-block bg-green-50 text-green-600 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-green-100 transition">Approve</a>
+                        <a href="{% url 'update_warranty_status' claim.id 'rejected' %}" class="inline-block bg-red-50 text-red-600 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-red-100 transition">Reject</a>
+                        {% else %}
+                        <span class="text-gray-400 text-xs font-medium">No actions</span>
                         {% endif %}
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="4" class="p-8 text-center text-gray-500">No active warranty claims.</td></tr>
+                <tr>
+                    <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+                        <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <p class="font-bold text-gray-900">No active warranty claims.</p>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>

@@ -1,366 +1,254 @@
-# service/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.contrib.auth import get_user_model
-from accounts.decorators import role_required
-from .models import ServiceCenter, Appointment, Inventory
-from .forms import ServiceCenterProfileForm, InventoryForm
-from .forms import InventoryForm
+from django.core.paginator import Paginator
+from django.db.models import F, Sum
+from datetime import date
+
+# Adjust these imports if your decorators are in a different file!
+from accounts.decorators import role_required 
+from .models import ServiceCenter, ServiceAppointment, InventoryItem, PartOrder, ServiceRevenue, WarrantyClaim
+from .forms import ServiceCenterForm, InventoryItemForm, PartOrderForm
+
+# --- DASHBOARD & PROFILE ---
 
 @login_required
 @role_required('SERVICE_CENTER')
 def service_dashboard(request):
-    center = getattr(request.user, 'service_center_profile', None)
-    appointments = Appointment.objects.filter(service_center=center) if center else []
-    inventory = Inventory.objects.filter(service_center=center) if center else []
+    center = getattr(request.user, 'service_center', None)
     
-    # Calculate low stock alerts natively in Python
-    low_stock_items = [item for item in inventory if item.stock_quantity <= item.reorder_threshold]
+    if not center:
+        return render(request, 'service/dashboard.html', {'center': None})
+
+    # Core Metrics
+    appointments = ServiceAppointment.objects.filter(center=center)
+    low_stock_items = InventoryItem.objects.filter(center=center, quantity__lt=F('threshold'))
     
     context = {
         'center': center,
-        'appointments': appointments,
-        'low_stock_items': low_stock_items,
+        'total_appointments': appointments.count(),
+        'in_progress': appointments.filter(status='in_progress').count(),
+        'completed': appointments.filter(status='completed').count(),
+        'low_stock_count': low_stock_items.count(),
+        'recent_requests': appointments.order_by('-created_at')[:5],
+        'low_stock_items': low_stock_items[:5],
     }
     return render(request, 'service/dashboard.html', context)
 
 @login_required
 @role_required('SERVICE_CENTER')
-def center_profile_view(request):
-    center, created = ServiceCenter.objects.get_or_create(manager=request.user)
+def service_profile(request):
+    center, created = ServiceCenter.objects.get_or_create(user=request.user)
     
     if request.method == 'POST':
-        form = ServiceCenterProfileForm(request.POST, instance=center)
+        form = ServiceCenterForm(request.POST, instance=center)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Service Center profile updated successfully.')
+            messages.success(request, 'Service Center profile updated successfully!')
             return redirect('service_dashboard')
     else:
-        form = ServiceCenterProfileForm(instance=center)
+        form = ServiceCenterForm(instance=center)
         
-    return render(request, 'service/profile.html', {'form': form})
+    return render(request, 'service/service_profile.html', {'form': form, 'center': center})
+
+# --- APPOINTMENT & REPAIR MANAGEMENT ---
 
 @login_required
 @role_required('SERVICE_CENTER')
 def appointment_list(request):
-    center = getattr(request.user, 'service_center_profile', None)
+    center = getattr(request.user, 'service_center', None)
     if not center:
-        messages.warning(request, 'Please complete your Service Center profile first.')
-        return redirect('center_profile')
-        
-    appointments = Appointment.objects.filter(service_center=center).order_by('scheduled_time')
-    return render(request, 'service/appointments.html', {'appointments': appointments})
+        messages.warning(request, "Please set up your service profile first.")
+        return redirect('service_profile')
+
+    appointments_qs = ServiceAppointment.objects.filter(center=center).order_by('-date', '-time')
+    
+    # Filter functionality
+    status_filter = request.GET.get('status', '')
+    if status_filter:
+        appointments_qs = appointments_qs.filter(status=status_filter)
+
+    paginator = Paginator(appointments_qs, 15)
+    appointments = paginator.get_page(request.GET.get('page'))
+
+    # Change this line:
+    return render(request, 'service/appointments.html', {
+        'appointments': appointments, 
+        'status_filter': status_filter
+    })
 
 @login_required
 @role_required('SERVICE_CENTER')
-def update_appointment_status(request, pk, new_status):
-    center = getattr(request.user, 'service_center_profile', None)
-    appointment = get_object_or_404(Appointment, pk=pk, service_center=center) # Changed here
+def update_appointment_status(request, appointment_id, new_status):
+    center = getattr(request.user, 'service_center', None)
+    appointment = get_object_or_404(ServiceAppointment, id=appointment_id, center=center)
     
-    valid_statuses = ['IN_PROGRESS', 'COMPLETED', 'CANCELLED']
+    valid_statuses = [choice[0] for choice in ServiceAppointment.STATUS_CHOICES]
+    
     if new_status in valid_statuses:
+        # Business Logic: Generate Revenue on Completion
+        if new_status == 'completed' and appointment.status != 'completed':
+            ServiceRevenue.objects.get_or_create(
+                center=center, 
+                appointment=appointment, 
+                defaults={'amount': appointment.estimated_cost}
+            )
+            
         appointment.status = new_status
         appointment.save()
-        messages.success(request, f"Appointment status updated to {appointment.get_status_display()}.")
-    return redirect('manage_appointments')
+        messages.success(request, f"Repair for {appointment.vehicle.make} marked as {appointment.get_status_display()}.")
+        
+    return redirect(request.META.get('HTTP_REFERER', 'appointment_list'))
+
+# --- INVENTORY & ORDERS ---
 
 @login_required
 @role_required('SERVICE_CENTER')
 def inventory_list(request):
-    center = getattr(request.user, 'service_center_profile', None)
+    center = getattr(request.user, 'service_center', None)
     if not center:
-        messages.warning(request, 'Please complete your Service Center profile first.')
-        return redirect('center_profile')
-        
-    inventory = Inventory.objects.filter(service_center=center)
-    return render(request, 'service/inventory.html', {'inventory': inventory})
+        return redirect('service_profile')
 
-@login_required
-@role_required('SERVICE_CENTER')
-def inventory_create(request):
-    center = get_object_or_404(ServiceCenter, manager=request.user)
+    inventory_qs = InventoryItem.objects.filter(center=center).order_by('part_name')
     
-    if request.method == 'POST':
-        form = InventoryForm(request.POST)
-        if form.is_valid():
-            item = form.save(commit=False)
-            item.service_center = center
-            item.save()
-            messages.success(request, 'Part added to inventory.')
-            return redirect('inventory_list')
-    else:
-        form = InventoryForm()
-    return render(request, 'service/inventory_form.html', {'form': form, 'action': 'Add'})
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        inventory_qs = inventory_qs.filter(part_name__icontains=search_query)
 
-from accounts.forms import DeliveryPartnerCreationForm
+    paginator = Paginator(inventory_qs, 20)
+    inventory = paginator.get_page(request.GET.get('page'))
 
-@login_required
-@role_required('SERVICE_CENTER')
-def create_delivery_partner(request):
-    if request.method == 'POST':
-        form = DeliveryPartnerCreationForm(request.POST)
-        if form.is_valid():
-            partner = form.save()
-            messages.success(request, f"Delivery Partner '{partner.username}' account created successfully.")
-            return redirect('service_dashboard')
-    else:
-        form = DeliveryPartnerCreationForm()
-        
-    return render(request, 'service/create_partner.html', {'form': form})
-
-# Add this to service/views.py
-from accounts.models import User
-from notifications.models import Notification
-from .forms import AppointmentBookingForm
-
-@login_required
-@role_required('EV_OWNER')
-def owner_service_dashboard(request):
-    appointments = Appointment.objects.filter(vehicle__user=request.user).order_by('-scheduled_time')
-    service_centers = ServiceCenter.objects.all()
-    return render(request, 'service/owner_service_dashboard.html', {
-        'appointments': appointments,
-        'centers': service_centers
+    return render(request, 'service/inventory_list.html', {
+        'inventory': inventory,
+        'search_query': search_query
     })
 
 @login_required
-@role_required('EV_OWNER')
-def book_service(request, center_id):
-    center = get_object_or_404(ServiceCenter, id=center_id)
+@role_required('SERVICE_CENTER')
+def manage_inventory_item(request, item_id=None):
+    center = get_object_or_404(ServiceCenter, user=request.user)
     
-    if request.method == 'POST':
-        form = AppointmentBookingForm(request.user, request.POST)
-        if form.is_valid():
-            appointment = form.save(commit=False)
-            appointment.service_center = center
-            appointment.save()
-            messages.success(request, f"Repair appointment booked at {center.name}!")
-            return redirect('owner_service_dashboard')
+    if item_id:
+        item = get_object_or_404(InventoryItem, id=item_id, center=center)
+        action = "Edit"
     else:
-        form = AppointmentBookingForm(request.user)
-        
-    return render(request, 'service/book_service.html', {'form': form, 'center': center})
+        item = None
+        action = "Add"
+
+    if request.method == 'POST':
+        form = InventoryItemForm(request.POST, instance=item)
+        if form.is_valid():
+            new_item = form.save(commit=False)
+            new_item.center = center
+            new_item.save()
+            messages.success(request, f"Inventory item {action.lower()}ed successfully.")
+            return redirect('inventory_list')
+    else:
+        form = InventoryItemForm(instance=item)
+
+    return render(request, 'service/inventory_form.html', {'form': form, 'action': action})
 
 @login_required
-@role_required('EV_OWNER')
-def trigger_sos(request):
+@role_required('SERVICE_CENTER')
+def order_list(request):
+    center = getattr(request.user, 'service_center', None)
+    orders_qs = PartOrder.objects.filter(item__center=center).order_by('-created_at')
+    
+    paginator = Paginator(orders_qs, 15)
+    orders = paginator.get_page(request.GET.get('page'))
+    
+    return render(request, 'service/order_list.html', {'orders': orders})
+
+@login_required
+@role_required('SERVICE_CENTER')
+def create_order(request, item_id):
+    center = get_object_or_404(ServiceCenter, user=request.user)
+    item = get_object_or_404(InventoryItem, id=item_id, center=center)
+    
     if request.method == 'POST':
-        # Find all Admins and Service Centers to alert them
-        emergency_contacts = User.objects.filter(role__in=['ADMIN', 'SERVICE_CENTER'])
-        
-        for contact in emergency_contacts:
-            Notification.objects.create(
-                user=contact,
-                title="🚨 EMERGENCY SOS TRIGGERED",
-                message=f"EV Owner {request.user.get_full_name() or request.user.username} requires immediate roadside assistance! Contact: {request.user.phone_number}"
-            )
+        form = PartOrderForm(request.POST)
+        if form.is_valid():
+            order = form.save(commit=False)
+            order.item = item
+            order.save()
             
-        messages.success(request, "SOS Alert broadcasted to all nearby Service Centers and Admins. Help is on the way.")
-    return redirect(request.META.get('HTTP_REFERER', 'owner_dashboard'))
-
-# Add these imports at the top of service/views.py if missing
-from django.db.models import Count
-from delivery.models import DeliveryTask, DeliveryPartnerProfile
-from .models import WarrantyClaim
-
-# --- ORDERS MANAGEMENT ---
-@login_required
-@role_required('SERVICE_CENTER')
-def manage_orders(request):
-    center = get_object_or_404(ServiceCenter, manager=request.user)
-    
-    # Simple form handling to assign an order to a Delivery Partner
-    if request.method == 'POST':
-        partner_id = request.POST.get('partner_id')
-        destination = request.POST.get('destination_address')
+            # Business Logic: Auto-restock if marked delivered instantly
+            if order.status == 'delivered':
+                item.quantity = F('quantity') + order.quantity
+                item.save()
+                
+            messages.success(request, f"Order placed for {item.part_name}.")
+            return redirect('order_list')
+    else:
+        form = PartOrderForm(initial={'quantity': max(item.threshold - item.quantity, 1)})
         
-        if partner_id and destination:
-            partner = get_object_or_404(DeliveryPartnerProfile, id=partner_id)
-            DeliveryTask.objects.create(
-                partner=partner,
-                destination_address=destination,
-                status='ASSIGNED'
-            )
-            messages.success(request, f"Part order dispatched to {partner.user.username}.")
-            return redirect('manage_orders')
-
-    orders = DeliveryTask.objects.all().order_by('-assigned_at')[:50] # Show recent platform orders
-    partners = DeliveryPartnerProfile.objects.filter(is_available=True)
-    
-    return render(request, 'service/orders.html', {'orders': orders, 'partners': partners})
-
-
-# --- WARRANTY VALIDATION ---
-@login_required
-@role_required('SERVICE_CENTER')
-def warranty_list(request):
-    center = get_object_or_404(ServiceCenter, manager=request.user)
-    claims = WarrantyClaim.objects.filter(service_center=center).order_by('-created_at')
-    return render(request, 'service/warranty.html', {'claims': claims})
+    return render(request, 'service/order_form.html', {'form': form, 'item': item})
 
 @login_required
 @role_required('SERVICE_CENTER')
-def update_warranty_status(request, pk, new_status):
-    center = get_object_or_404(ServiceCenter, manager=request.user)
-    claim = get_object_or_404(WarrantyClaim, pk=pk, service_center=center)
+def update_order_status(request, order_id, new_status):
+    center = getattr(request.user, 'service_center', None)
+    order = get_object_or_404(PartOrder, id=order_id, item__center=center)
     
-    if new_status in dict(WarrantyClaim.StatusChoices.choices).keys():
-        claim.status = new_status
-        claim.save()
-        messages.success(request, f"Warranty claim marked as {claim.get_status_display()}.")
+    valid_statuses = [choice[0] for choice in PartOrder.STATUS_CHOICES]
+    
+    if new_status in valid_statuses:
+        # Business Logic: Increase stock upon delivery
+        if new_status == 'delivered' and order.status != 'delivered':
+            order.item.quantity = F('quantity') + order.quantity
+            order.item.save()
+            
+        order.status = new_status
+        order.save()
+        messages.success(request, f"Order status updated to {order.get_status_display()}.")
         
-    return redirect('warranty_list')
-
+    return redirect('order_list')
 
 # --- REPORTS & ANALYTICS ---
+
 @login_required
 @role_required('SERVICE_CENTER')
 def service_reports(request):
-    center = get_object_or_404(ServiceCenter, manager=request.user)
+    center = getattr(request.user, 'service_center', None)
+    if not center:
+        return redirect('service_profile')
+
+    # Match the variables your reports.html is asking for
+    total_completed_repairs = ServiceAppointment.objects.filter(center=center, status='completed').count()
+    approved_warranties = WarrantyClaim.objects.filter(appointment__center=center, status='approved').count()
     
-    # Calculate performance analytics
-    total_completed_repairs = Appointment.objects.filter(service_center=center, status='COMPLETED').count()
-    approved_warranties = WarrantyClaim.objects.filter(service_center=center, status='APPROVED').count()
-    
-    # Group repairs by issue type to see what breaks most often
-    issue_analytics = Appointment.objects.filter(service_center=center).values('issue_description').annotate(count=Count('id')).order_by('-count')[:5]
+    # Group issues to see what breaks most often
+    issue_analytics = ServiceAppointment.objects.filter(center=center).values('issue_description').annotate(count=Count('id')).order_by('-count')[:5]
 
     context = {
         'total_completed_repairs': total_completed_repairs,
         'approved_warranties': approved_warranties,
         'issue_analytics': issue_analytics,
     }
+    # Note: Make sure the template name matches the file you uploaded!
     return render(request, 'service/reports.html', context)
-
-@login_required
-@role_required('SERVICE_CENTER')
-def manage_appointments(request):
-    # Get the service center profile for the logged-in user
-    center = getattr(request.user, 'service_center_profile', None)
-    
-    if not center:
-        messages.warning(request, "Please complete your Service Center setup first.")
-        return redirect('service_dashboard') # Assuming you have a dashboard view
-        
-    # Fetch all appointments for this center
-    appointments = Appointment.objects.filter(service_center=center).order_by('scheduled_time')
-    
-    return render(request, 'service/appointments.html', {'appointments': appointments})
-
-from django.db.models import Sum, Count
-from .models import PartOrder, WarrantyClaim, Appointment # Ensure imports match your file
-
-@login_required
-@role_required('SERVICE_CENTER')
-def update_appointment_status(request, pk, new_status):
-    center = getattr(request.user, 'service_center_profile', None)
-    appointment = get_object_or_404(Appointment, pk=pk, service_center=center)
-    
-    valid_statuses = ['IN_PROGRESS', 'COMPLETED', 'CANCELLED']
-    if new_status in valid_statuses:
-        appointment.status = new_status
-        appointment.save()
-        messages.success(request, f"Appointment status updated to {appointment.get_status_display()}.")
-    return redirect('manage_appointments')
-
-@login_required
-@role_required('SERVICE_CENTER')
-def manage_orders(request):
-    center = getattr(request.user, 'service_center_profile', None)
-    orders = PartOrder.objects.filter(service_center=center).order_by('-ordered_at')
-    return render(request, 'service/orders.html', {'orders': orders})
+from django.db.models import Count # Make sure to add this import at the top of views.py!
 
 @login_required
 @role_required('SERVICE_CENTER')
 def warranty_list(request):
-    center = getattr(request.user, 'service_center_profile', None)
-    warranties = WarrantyClaim.objects.filter(service_center=center).order_by('-created_at')
+    center = getattr(request.user, 'service_center', None)
+    if not center:
+        return redirect('service_profile')
+        
+    warranties = WarrantyClaim.objects.filter(appointment__center=center).order_by('-created_at')
     return render(request, 'service/warranties.html', {'warranties': warranties})
 
 @login_required
 @role_required('SERVICE_CENTER')
-def update_warranty_status(request, pk, new_status):
-    center = getattr(request.user, 'service_center_profile', None)
-    claim = get_object_or_404(WarrantyClaim, pk=pk, service_center=center)
-    if new_status in ['APPROVED', 'REJECTED']:
+def update_warranty_status(request, claim_id, new_status):
+    center = getattr(request.user, 'service_center', None)
+    claim = get_object_or_404(WarrantyClaim, id=claim_id, appointment__center=center)
+    
+    if new_status in ['approved', 'rejected']:
         claim.status = new_status
         claim.save()
-        messages.success(request, f"Warranty claim {new_status.lower()}.")
+        messages.success(request, f"Warranty claim marked as {claim.get_status_display()}.")
+        
     return redirect('warranty_list')
-
-@login_required
-@role_required('SERVICE_CENTER')
-def service_reports(request):
-    center = getattr(request.user, 'service_center_profile', None)
-    
-    completed_repairs = Appointment.objects.filter(service_center=center, status='COMPLETED')
-    total_repairs = completed_repairs.count()
-    # Assuming your RepairAppointment has a 'cost' field. If not, remove this line.
-    # total_revenue = completed_repairs.aggregate(Sum('cost'))['cost__sum'] or 0.00
-    total_revenue = 0.00 # Placeholder: Update with your actual cost logic
-    
-    active_warranties = WarrantyClaim.objects.filter(service_center=center, status='PENDING').count()
-    
-    return render(request, 'service/reports.html', {
-        'total_repairs': total_repairs,
-        'total_revenue': total_revenue,
-        'active_warranties': active_warranties
-    })
-    
-    from django.contrib.auth import get_user_model
-from .forms import DeliveryPartnerCreationForm
-
-User = get_user_model()
-
-@login_required
-@role_required('SERVICE_CENTER')
-def manage_delivery_partners(request):
-    # Fetch all users who have the DELIVERY_PARTNER role
-    partners = User.objects.filter(role='DELIVERY_PARTNER').order_by('-date_joined')
-    return render(request, 'service/delivery_partners.html', {'partners': partners})
-
-@login_required
-@role_required('SERVICE_CENTER')
-def add_delivery_partner(request):
-    if request.method == 'POST':
-        form = DeliveryPartnerCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            # Securely hash the password
-            user.set_password(form.cleaned_data['password'])
-            # FORCIBLY assign the Delivery Partner role (security measure)
-            user.role = 'DELIVERY_PARTNER'
-            user.save()
-            
-            messages.success(request, f"Delivery Partner '{user.username}' created successfully!")
-            return redirect('manage_delivery_partners')
-    else:
-        form = DeliveryPartnerCreationForm()
-        
-    return render(request, 'service/delivery_partner_form.html', {'form': form})
-
-@login_required
-@role_required('SERVICE_CENTER')
-def inventory_create(request):
-    # Get the service center belonging to the logged-in user
-    center = getattr(request.user, 'service_center_profile', None)
-    
-    if request.method == 'POST':
-        form = InventoryForm(request.POST)
-        if form.is_valid():
-            # Save the form but don't commit to the database yet
-            inventory_item = form.save(commit=False)
-            # Automatically assign it to this specific service center
-            inventory_item.service_center = center
-            # Now save it to the database
-            inventory_item.save()
-            
-            messages.success(request, "Inventory part added successfully!")
-            return redirect('inventory_list') # Ensure this matches your URL name
-    else:
-        # If it's a GET request, just show the empty form
-        form = InventoryForm()
-        
-    # Make sure {'form': form} is passed in the dictionary here!
-    return render(request, 'service/inventory_form.html', {'form': form})

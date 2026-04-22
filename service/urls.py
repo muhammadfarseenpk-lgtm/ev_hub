@@ -1,40 +1,29 @@
-# service/urls.py
 from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Dashboard & Profile
     path('', views.service_dashboard, name='service_dashboard'),
-    path('profile/', views.center_profile_view, name='center_profile'),
+    path('profile/', views.service_profile, name='service_profile'),
     
+    # Appointments & Repairs
     path('appointments/', views.appointment_list, name='appointment_list'),
-    path('appointments/<int:pk>/status/<str:new_status>/', views.update_appointment_status, name='update_appointment_status'),
+    path('appointments/<int:appointment_id>/status/<str:new_status>/', views.update_appointment_status, name='update_appointment_status'),
     
+    # Inventory Management
     path('inventory/', views.inventory_list, name='inventory_list'),
-    path('inventory/add/', views.inventory_create, name='inventory_create'),
-    path('delivery-partners/create/', views.create_delivery_partner, name='create_delivery_partner'),
-    path('my-repairs/', views.owner_service_dashboard, name='owner_service_dashboard'),
-    path('book-repair/<int:center_id>/', views.book_service, name='book_service'),
-    path('sos-emergency/', views.trigger_sos, name='trigger_sos'),
-    path('orders/', views.manage_orders, name='manage_orders'),
-    path('warranty/', views.warranty_list, name='warranty_list'),
-    path('warranty/<int:pk>/status/<str:new_status>/', views.update_warranty_status, name='update_warranty_status'),
-    path('reports/', views.service_reports, name='service_reports'),
-    path('appointments/', views.manage_appointments, name='manage_appointments'),
-    # Appointment Status Update
-    path('appointments/<int:pk>/status/<str:new_status>/', views.update_appointment_status, name='update_appointment_status'),
+    path('inventory/add/', views.manage_inventory_item, name='inventory_create'),
+    path('inventory/<int:item_id>/edit/', views.manage_inventory_item, name='inventory_edit'),
     
     # Part Orders
-    path('orders/', views.manage_orders, name='manage_orders'),
-    
-    # Warranty
-    path('warranty/', views.warranty_list, name='warranty_list'),
-    path('warranty/<int:pk>/status/<str:new_status>/', views.update_warranty_status, name='update_warranty_status'),
+    path('orders/', views.order_list, name='order_list'),
+    path('inventory/<int:item_id>/order/', views.create_order, name='create_order'),
+    path('orders/<int:order_id>/status/<str:new_status>/', views.update_order_status, name='update_order_status'),
     
     # Reports
     path('reports/', views.service_reports, name='service_reports'),
     
-    # Delivery Partner Management
-    path('delivery-partners/', views.manage_delivery_partners, name='manage_delivery_partners'),
-    path('delivery-partners/add/', views.add_delivery_partner, name='add_delivery_partner'),
-    
+    # Warranty Management
+    path('warranties/', views.warranty_list, name='warranty_list'),
+    path('warranties/<int:claim_id>/status/<str:new_status>/', views.update_warranty_status, name='update_warranty_status'),
 ]

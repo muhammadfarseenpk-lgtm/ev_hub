@@ -1,52 +1,117 @@
 {% extends 'base.html' %}
-{% block page_title %}Service Center Dashboard{% endblock %}
+{% block page_title %}Service Dashboard{% endblock %}
+{% block header_title %}Service Center Overview{% endblock %}
 
 {% block content %}
-{% if not center or not center.name %}
-<div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-    <p class="text-sm text-yellow-700">
-        Your profile is incomplete. <a href="{% url 'center_profile' %}" class="font-bold underline">Setup your Service Center</a> to receive appointments.
-    </p>
+{% if not center %}
+<div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-r-[1.5rem] shadow-sm mb-8 flex justify-between items-center">
+    <div>
+        <h3 class="text-yellow-800 font-bold text-lg">Setup Required</h3>
+        <p class="text-yellow-700 text-sm mt-1">You need to complete your Service Center profile before accepting appointments.</p>
+    </div>
+    <a href="{% url 'service_profile' %}" class="bg-yellow-400 text-yellow-900 px-5 py-2.5 rounded-xl font-bold hover:bg-yellow-500 transition shadow-sm">Setup Profile</a>
 </div>
 {% else %}
-<div class="grid gap-6 md:grid-cols-2 mb-6">
-    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-        <h3 class="text-sm font-medium text-gray-500">Active Appointments</h3>
-        <p class="text-3xl font-bold mt-2">{{ appointments.count }}</p>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-[1.5rem] p-6 shadow-sm border border-gray-100 relative overflow-hidden group">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-purple-50 rounded-bl-full z-0 opacity-50 transition-transform group-hover:scale-110"></div>
+        <div class="relative z-10">
+            <p class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">Total Appointments</p>
+            <h3 class="text-3xl font-black text-gray-900">{{ total_appointments|default:"0" }}</h3>
+        </div>
     </div>
-    
-    <div class="bg-white p-6 rounded-xl border {% if low_stock_items %}border-red-300 bg-red-50{% else %}border-gray-200{% endif %} shadow-sm">
-        <h3 class="text-sm font-medium {% if low_stock_items %}text-red-800{% else %}text-gray-500{% endif %}">Low Stock Alerts</h3>
-        <p class="text-3xl font-bold mt-2 {% if low_stock_items %}text-red-600{% endif %}">{{ low_stock_items|length }}</p>
-        {% if low_stock_items %}
-            <p class="text-xs text-red-600 mt-1">Requires immediate reordering.</p>
-        {% endif %}
+
+    <div class="bg-white rounded-[1.5rem] p-6 shadow-sm border border-gray-100 relative overflow-hidden group">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full z-0 opacity-50 transition-transform group-hover:scale-110"></div>
+        <div class="relative z-10">
+            <p class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">Active Repairs</p>
+            <h3 class="text-3xl font-black text-blue-600">{{ in_progress|default:"0" }}</h3>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-[1.5rem] p-6 shadow-sm border border-gray-100 relative overflow-hidden group">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-green-50 rounded-bl-full z-0 opacity-50 transition-transform group-hover:scale-110"></div>
+        <div class="relative z-10">
+            <p class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">Successfully Fixed</p>
+            <h3 class="text-3xl font-black text-green-600">{{ completed|default:"0" }}</h3>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-[1.5rem] p-6 shadow-sm border {% if low_stock_count > 0 %}border-red-100 bg-red-50/30{% else %}border-gray-100{% endif %} relative overflow-hidden group">
+        <div class="absolute top-0 right-0 w-24 h-24 {% if low_stock_count > 0 %}bg-red-50{% else %}bg-gray-50{% endif %} rounded-bl-full z-0 opacity-50 transition-transform group-hover:scale-110"></div>
+        <div class="relative z-10">
+            <p class="text-xs font-bold {% if low_stock_count > 0 %}text-red-500{% else %}text-gray-500{% endif %} mb-2 uppercase tracking-wide">Inventory Alerts</p>
+            <h3 class="text-3xl font-black {% if low_stock_count > 0 %}text-red-600{% else %}text-gray-900{% endif %}">{{ low_stock_count|default:"0" }}</h3>
+            {% if low_stock_count > 0 %}
+                <p class="text-[10px] text-red-500 font-bold mt-2 uppercase tracking-wider">Restock Required</p>
+            {% endif %}
+        </div>
     </div>
 </div>
 
-<div class="bg-white rounded-xl shadow-sm border border-gray-200">
-    <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-        <h3 class="font-bold text-lg">Today's Appointments</h3>
-        <a href="{% url 'appointment_list' %}" class="text-blue-600 text-sm hover:underline">View All</a>
-    </div>
-    <div class="p-0">
-        {% for appt in appointments|slice:":5" %}
-        <div class="flex justify-between items-center p-4 border-b border-gray-100 last:border-0">
-            <div>
-                <p class="font-medium">{{ appt.vehicle.make }} {{ appt.vehicle.model }} ({{ appt.vehicle.registration_number }})</p>
-                <p class="text-xs text-gray-500">Scheduled: {{ appt.scheduled_time|date:"M d, Y h:i A" }}</p>
-            </div>
-            <div>
-                <span class="text-xs px-2 py-1 rounded font-semibold bg-blue-100 text-blue-800">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="bg-white rounded-[1.5rem] shadow-sm border border-gray-100">
+        <div class="p-6 border-b border-gray-50 flex justify-between items-center">
+            <h3 class="font-bold text-lg text-gray-900">Recent Service Requests</h3>
+            <a href="{% url 'appointment_list' %}" class="text-sm text-[#8b5cf6] font-bold hover:underline">Manage All</a>
+        </div>
+        <div class="divide-y divide-gray-50">
+            {% for appt in recent_requests %}
+            <div class="p-5 flex justify-between items-center hover:bg-gray-50/50 transition">
+                <div>
+                    <p class="font-bold text-gray-900">{{ appt.vehicle.make }} {{ appt.vehicle.model }}</p>
+                    <p class="text-xs text-gray-500 mt-1">Scheduled: <span class="font-medium text-gray-700">{{ appt.date|date:"M d" }} at {{ appt.time|time:"h:i A" }}</span></p>
+                </div>
+                <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md
+                    {% if appt.status == 'pending' %}bg-yellow-100 text-yellow-700
+                    {% elif appt.status == 'in_progress' %}bg-blue-100 text-blue-700
+                    {% elif appt.status == 'completed' %}bg-green-100 text-green-700
+                    {% else %}bg-gray-100 text-gray-700{% endif %}">
                     {{ appt.get_status_display }}
                 </span>
             </div>
+            {% empty %}
+            <div class="p-8 text-center">
+                <p class="text-sm text-gray-500 font-medium">No recent appointments found.</p>
+            </div>
+            {% endfor %}
         </div>
-        {% empty %}
-        <div class="p-6 text-center text-gray-500 text-sm">
-            No appointments scheduled currently.
+    </div>
+
+    <div class="bg-white rounded-[1.5rem] shadow-sm border border-gray-100">
+        <div class="p-6 border-b border-gray-50 flex justify-between items-center">
+            <h3 class="font-bold text-lg text-gray-900">Parts to Reorder</h3>
+            <a href="{% url 'inventory_list' %}" class="text-sm text-[#8b5cf6] font-bold hover:underline">View Inventory</a>
         </div>
-        {% endfor %}
+        <div class="divide-y divide-gray-50">
+            {% for item in low_stock_items %}
+            <div class="p-5 flex justify-between items-center bg-red-50/20 hover:bg-red-50/40 transition">
+                <div class="flex items-center space-x-3">
+                    <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                    <div>
+                        <p class="font-bold text-gray-900">{{ item.part_name }}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Threshold: {{ item.threshold }}</p>
+                    </div>
+                </div>
+                <div class="text-right flex items-center space-x-4">
+                    <div>
+                        <p class="text-lg font-black text-red-600">{{ item.quantity }}</p>
+                        <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">In Stock</p>
+                    </div>
+                    <a href="{% url 'create_order' item.id %}" class="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-lg text-xs font-bold transition">Order</a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="p-8 text-center">
+                <div class="w-12 h-12 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <p class="text-sm text-gray-700 font-bold mb-1">Inventory looks good!</p>
+                <p class="text-xs text-gray-500">No items are currently below their safety threshold.</p>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 {% endif %}

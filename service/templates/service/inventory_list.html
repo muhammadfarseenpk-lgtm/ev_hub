@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block page_title %}Parts Inventory{% endblock %}
+{% block header_title %}Inventory Management{% endblock %}
+
+{% block content %}
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+    <form method="get" class="w-full sm:w-auto flex-1 max-w-md relative">
+        <input type="text" name="search" value="{{ search_query }}" placeholder="Search parts..." class="w-full px-4 py-3 bg-white border border-gray-100 rounded-xl focus:border-[#8b5cf6] focus:ring-1 focus:ring-[#8b5cf6] outline-none transition shadow-sm font-medium">
+        <button type="submit" class="absolute right-3 top-3 text-gray-400 hover:text-[#8b5cf6]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </button>
+    </form>
+    <a href="{% url 'inventory_create' %}" class="bg-[#8b5cf6] text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-purple-600 transition shadow-sm whitespace-nowrap">+ Add New Part</a>
+</div>
+
+<div class="bg-white rounded-[1.5rem] shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-gray-600">
+            <thead class="bg-gray-50/50 border-b border-gray-100 text-gray-500 uppercase text-[10px] font-bold tracking-wider">
+                <tr>
+                    <th class="px-6 py-4">Part Name</th>
+                    <th class="px-6 py-4 text-center">In Stock</th>
+                    <th class="px-6 py-4 text-center">Unit Price</th>
+                    <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for item in inventory %}
+                <tr class="hover:bg-gray-50/50 transition">
+                    <td class="px-6 py-4">
+                        <p class="font-bold text-gray-900">{{ item.part_name }}</p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wide mt-0.5">Threshold: {{ item.threshold }}</p>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="inline-flex items-center px-3 py-1 rounded-lg font-black text-sm
+                            {% if item.quantity < item.threshold %}bg-red-50 text-red-600
+                            {% else %}bg-green-50 text-green-600{% endif %}">
+                            {{ item.quantity }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center font-bold text-gray-800">
+                        ${{ item.price }}
+                    </td>
+                    <td class="px-6 py-4 text-right space-x-2">
+                        <a href="{% url 'create_order' item.id %}" class="inline-block bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">Order</a>
+                        <a href="{% url 'inventory_edit' item.id %}" class="inline-block bg-gray-50 text-gray-600 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-gray-100 border border-gray-200 transition">Edit</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-6 py-12 text-center">
+                        <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                        </div>
+                        <p class="text-gray-900 font-bold text-lg mb-1">Your inventory is empty.</p>
+                        <p class="text-sm text-gray-500">Add parts to start tracking your stock.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if inventory.has_other_pages %}
+    <div class="px-6 py-4 border-t border-gray-50 bg-gray-50/30 flex justify-between items-center">
+        <span class="text-sm text-gray-500 font-medium">Page {{ inventory.number }} of {{ inventory.paginator.num_pages }}</span>
+        <div class="space-x-2">
+            {% if inventory.has_previous %}
+                <a href="?page={{ inventory.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm font-bold hover:bg-gray-50 shadow-sm transition">Prev</a>
+            {% endif %}
+            {% if inventory.has_next %}
+                <a href="?page={{ inventory.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-1.5 bg-white border border-gray-200 text-[#8b5cf6] rounded-lg text-sm font-bold hover:bg-purple-50 shadow-sm transition">Next</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -5,6 +5,8 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import EVOwnerRegistrationForm
+from .decorators import role_required
+from .forms import EVOwnerRegistrationForm, AdminUserCreationForm, DeliveryPartnerCreationForm
 
 def register_view(request):
     if request.user.is_authenticated:
@@ -68,3 +70,35 @@ def dashboard_router(request):
         
     logout(request)
     return redirect('login')
+
+# accounts/views.py
+
+@login_required
+@role_required('ADMIN')
+def admin_create_user(request):
+    if request.method == 'POST':
+        form = AdminUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            messages.success(request, f"Successfully created {user.get_role_display()} account.")
+            
+            # ---> CHANGE THIS LINE TO MATCH BELOW <---
+            return redirect('dashboard_router') 
+            
+    else:
+        form = AdminUserCreationForm()
+    return render(request, 'accounts/admin_create_user.html', {'form': form})
+# Add this to accounts/views.py
+
+@login_required
+@role_required('SERVICE_CENTER')
+def center_create_delivery(request):
+    if request.method == 'POST':
+        form = DeliveryPartnerCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            messages.success(request, f"Successfully registered Delivery Partner: {user.username}.")
+            return redirect('dashboard_router') # Routes back to the Service Center dashboard
+    else:    form = DeliveryPartnerCreationForm()
+        
+    return render(request, 'accounts/center_create_delivery.html', {'form': form})

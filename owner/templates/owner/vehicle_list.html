@@ -1,42 +1,54 @@
 {% extends 'base.html' %}
 {% block page_title %}My Vehicles{% endblock %}
+{% block header_title %}My Vehicles{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
-    <div class="flex justify-between items-center">
+<div class="flex justify-between items-center mb-8">
+    <div>
         <h2 class="text-xl font-bold text-gray-900">Registered Vehicles</h2>
-        <a href="{% url 'owner_vehicle_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Add Vehicle</a>
+        <p class="text-sm text-gray-500 mt-1">Manage your electric vehicles and track battery status.</p>
     </div>
+    <a href="{% url 'vehicle_add' %}" class="bg-[#8b5cf6] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-purple-600 transition shadow-sm">+ Add Vehicle</a>
+</div>
 
-    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {% for vehicle in vehicles %}
-        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-            <div class="flex justify-between items-start mb-4">
-                <div>
-                    <h3 class="font-bold text-lg">{{ vehicle.make }} {{ vehicle.model }}</h3>
-                    <p class="text-sm text-gray-500">{{ vehicle.registration_number }}</p>
-                </div>
-                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{{ vehicle.battery_capacity_kwh }} kWh</span>
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    {% for vehicle in vehicles %}
+    <div class="bg-white rounded-[1.5rem] p-6 shadow-sm border border-gray-100 relative overflow-hidden group">
+        <div class="absolute top-0 left-0 w-full h-1.5 bg-[#8b5cf6]"></div>
+
+        <div class="flex justify-between items-start mb-4 mt-2">
+            <div>
+                <h3 class="text-lg font-bold text-gray-900">{{ vehicle.make }} {{ vehicle.model }}</h3>
+                <p class="text-xs text-gray-500 font-mono mt-1">{{ vehicle.registration_number }}</p>
             </div>
-            <div class="mb-4">
-                <div class="flex justify-between text-sm mb-1">
-                    <span>Battery Level</span>
-                    <span class="font-medium">{{ vehicle.current_battery_level }}%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="bg-green-500 h-2 rounded-full" style="width: {{ vehicle.current_battery_level }}%"></div>
-                </div>
+            <span class="bg-purple-50 text-purple-700 text-[10px] uppercase tracking-wide px-2.5 py-1 rounded-full font-bold">
+                {{ vehicle.vehicle_type|default:"EV" }}
+            </span>
+        </div>
+
+        <div class="mb-6">
+            <div class="flex justify-between text-xs mb-1.5">
+                <span class="text-gray-500 font-bold">Battery Level</span>
+                <span class="font-bold text-gray-800">{{ vehicle.battery_level }}%</span>
             </div>
-            <div class="flex space-x-2 border-t pt-4">
-                <a href="{% url 'owner_vehicle_update' vehicle.id %}" class="text-sm text-blue-600 hover:underline">Edit</a>
-                <a href="{% url 'owner_vehicle_delete' vehicle.id %}" class="text-sm text-red-600 hover:underline">Remove</a>
+            <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full {% if vehicle.battery_level > 20 %}bg-green-500{% else %}bg-red-500{% endif %}" style="width: {{ vehicle.battery_level }}%;"></div>
             </div>
         </div>
-        {% empty %}
-        <div class="col-span-full text-center py-12 bg-white border border-dashed border-gray-300 rounded-xl">
-            <p class="text-gray-500">You have no vehicles registered. Please add a vehicle to continue.</p>
+
+        <div class="flex space-x-3 pt-4 border-t border-gray-50">
+            <a href="{% url 'vehicle_edit' vehicle.id %}" class="flex-1 text-center py-2.5 text-sm text-[#8b5cf6] bg-purple-50 rounded-xl hover:bg-purple-100 font-bold transition">Edit</a>
+            <a href="{% url 'vehicle_delete' vehicle.id %}" class="flex-1 text-center py-2.5 text-sm text-red-600 bg-red-50 rounded-xl hover:bg-red-100 font-bold transition">Remove</a>
         </div>
-        {% endfor %}
     </div>
+    {% empty %}
+    <div class="col-span-full bg-white rounded-[1.5rem] p-12 text-center border border-gray-100 shadow-sm">
+        <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+        </div>
+        <p class="text-gray-500 mb-4">You have no vehicles registered yet.</p>
+        <a href="{% url 'vehicle_add' %}" class="text-[#8b5cf6] font-bold hover:underline">Add your first EV</a>
+    </div>
+    {% endfor %}
 </div>
 {% endblock %}

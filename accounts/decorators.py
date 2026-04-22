@@ -1,18 +1,19 @@
-# accounts/decorators.py
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
 from functools import wraps
 
 def role_required(*allowed_roles):
-    """Decorator to enforce strict RBAC on views."""
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
             if not request.user.is_authenticated:
-                return redirect('login')
-            if request.user.role in allowed_roles:
+                return redirect('login') # Redirect to your login page name
+            
+            # Check if the user's role is in the list of allowed roles
+            if request.user.role in allowed_roles or request.user.is_superuser:
                 return view_func(request, *args, **kwargs)
-            raise PermissionDenied("You do not have permission to access this module.")
+            
+            # If they don't have permission, block them
+            raise PermissionDenied 
         return _wrapped_view
     return decorator
-

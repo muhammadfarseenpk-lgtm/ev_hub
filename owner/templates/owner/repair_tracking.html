@@ -1,37 +1,69 @@
 {% extends 'base.html' %}
 {% block page_title %}Repair Tracking{% endblock %}
+{% block header_title %}My Repairs{% endblock %}
+
 {% block content %}
-<div class="max-w-5xl mx-auto space-y-6">
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-900">Live Repair Status</h2>
-        <a href="{% url 'book_repair' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700">+ Book Service</a>
+<div class="max-w-5xl mx-auto space-y-8">
+    
+    <div class="bg-white p-6 rounded-[1.5rem] shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+            <h2 class="text-xl font-bold text-gray-900">Live Repair Status</h2>
+            <p class="text-sm text-gray-500">Track your service center requests.</p>
+        </div>
+        
+        <div class="flex items-center gap-4 w-full md:w-auto">
+            <form method="get" class="flex-1 md:w-48">
+                <select name="status" onchange="this.form.submit()" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#8b5cf6] focus:ring-1 focus:ring-[#8b5cf6]">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </form>
+            <a href="{% url 'book_repair' %}" class="bg-[#8b5cf6] text-white px-5 py-2.5 rounded-xl font-medium hover:bg-purple-600 transition whitespace-nowrap shadow-sm">+ Book Service</a>
+        </div>
     </div>
 
-    {% for repair in repairs %}
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <div class="flex justify-between items-start mb-4 border-b border-gray-100 pb-4">
-            <div>
-                <h3 class="font-bold text-lg text-gray-900">{{ repair.vehicle.make }} {{ repair.vehicle.model }} ({{ repair.vehicle.registration_number }})</h3>
-                <p class="text-sm text-gray-500">Issue: {{ repair.issue_description }}</p>
+    <div class="space-y-4">
+        {% for repair in repairs %}
+        <div class="bg-white p-6 rounded-[1.5rem] shadow-sm border border-gray-100 relative overflow-hidden group">
+            
+            <div class="absolute left-0 top-0 bottom-0 w-1.5 
+                {% if repair.status == 'pending' %}bg-yellow-400
+                {% elif repair.status == 'in_progress' %}bg-blue-400
+                {% elif repair.status == 'completed' %}bg-green-400
+                {% else %}bg-red-400{% endif %}">
             </div>
-            <span class="px-3 py-1 text-xs rounded-full font-bold uppercase
-                {% if repair.status == 'PENDING' %}bg-yellow-100 text-yellow-800
-                {% elif repair.status == 'IN_PROGRESS' %}bg-blue-100 text-blue-800 animate-pulse
-                {% elif repair.status == 'COMPLETED' %}bg-green-100 text-green-800
-                {% else %}bg-gray-100 text-gray-800{% endif %}">
-                {{ repair.get_status_display|default:repair.status }}
-            </span>
+
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 pl-2">
+                <div>
+                    <h3 class="font-bold text-lg text-gray-900">{{ repair.vehicle.make }} {{ repair.vehicle.model }} <span class="text-xs font-mono text-gray-400 ml-2">{{ repair.vehicle.registration_number }}</span></h3>
+                    <p class="text-sm text-gray-500 mt-1"><span class="font-medium text-gray-700">Issue:</span> {{ repair.issue_description }}</p>
+                </div>
+                <span class="mt-3 md:mt-0 px-3 py-1 text-[10px] rounded-full font-bold uppercase tracking-wide
+                    {% if repair.status == 'pending' %}bg-yellow-50 text-yellow-600
+                    {% elif repair.status == 'in_progress' %}bg-blue-50 text-blue-600 animate-pulse
+                    {% elif repair.status == 'completed' %}bg-green-50 text-green-600
+                    {% else %}bg-red-50 text-red-600{% endif %}">
+                    {{ repair.get_status_display }}
+                </span>
+            </div>
+            
+            <div class="flex justify-between text-xs text-gray-500 pt-4 border-t border-gray-50 pl-2">
+                <span><strong class="text-gray-700">Requested:</strong> {{ repair.created_at|date:"M d, Y - h:i A" }}</span>
+                <span><strong class="text-gray-700">Center:</strong> {{ repair.service_center.name|default:"Unassigned" }}</span>
+            </div>
         </div>
-        <div class="flex justify-between text-sm text-gray-500">
-            <span>Scheduled: {{ repair.scheduled_time|date:"M d, Y - H:i" }}</span>
-            <span>Service Center: {{ repair.service_center.name|default:"Unassigned" }}</span>
+        {% empty %}
+        <div class="bg-white p-12 text-center rounded-[1.5rem] shadow-sm border border-gray-100">
+            <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+            </div>
+            <p class="text-gray-500 mb-4">You have no active repair bookings.</p>
+            <a href="{% url 'book_repair' %}" class="text-[#8b5cf6] font-bold hover:underline">Book an appointment now</a>
         </div>
+        {% endfor %}
     </div>
-    {% empty %}
-    <div class="bg-white p-10 text-center rounded-xl shadow-sm border border-gray-200">
-        <p class="text-gray-500 mb-4">You have no active repair bookings.</p>
-        <a href="{% url 'book_repair' %}" class="text-blue-600 font-bold hover:underline">Book an appointment now</a>
-    </div>
-    {% endfor %}
 </div>
 {% endblock %}
